@@ -17,8 +17,6 @@ cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,BIRTHDAY,p
   }else{
     dataCol <- c(deparse(substitute(ID)),deparse(substitute(ICD)),deparse(substitute(date)))
   }
-
-
   DataFile <- DataFile[,dataCol,with=FALSE]
   DataFile <- DataFile[,indexdate := max(date),by=ID][,predfirstdate := min(date),by=ID][,predictdate := indexdate-predictwindow,]
 
@@ -87,7 +85,7 @@ cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,BIRTHDAY,p
                               icdColName = ICD,
                               dateColName = date,
                               isDescription = FALSE,
-                              icd10usingDate = "2016-01-01")
+                              icd10usingDate = "1966-01-01")
 
         CCSWide <- groupedDataLongToWide(dxDataFile = CCSLong$groupedDT,
                                          idColName = ID,

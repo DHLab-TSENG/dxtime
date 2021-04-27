@@ -57,7 +57,7 @@ length <- filterCasesRecords(DataFile = record_dm,
                              date = date,
                              predictwindow = 180, 
                              followindow = 6500, 
-                             followindow_limit = 180, 
+                             followindow_limit = 1800, 
                              count_limit = 2 
                              )
 head(length$DataFile_pat) 
@@ -80,6 +80,10 @@ match <- matchCases(DataFile = pat_dm,
                     ID = ID,
                     label = label,
                     matchedVariable = c("age","SEX"))
+# match <- matchCases(DataFile = pat_dm %>% filter(pat_dm$ID %in% length$DataFile_pat$ID),
+#                     ID = ID,
+#                     label = label,
+#                     matchedVariable = c("age","SEX"))
 head(match)
 nrow(match)
 ```
@@ -97,6 +101,7 @@ nrow(match)
 `icdcount`：定義在追蹤期間，多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)。  
 
 ```{r}
+# forcut <- merge(length$DataFile_rec %>% filter(ID %in% match$ID),pat_dm[,.(ID,BIRTHDAY)],all.x=T)
 forcut <- merge(record_dm,pat_dm[,.(ID,BIRTHDAY)],all.x=T)
 head(forcut)
 windowcut <- cutWindow(DataFile = forcut , 
@@ -127,12 +132,12 @@ window_N代表時間窗的次序，數字越小越接近指標日。
 `predictwindow`: 預測天數，意指「想要於指標日多久前進行預測」。   
 `window`：設定時間窗的長度。  
 `N`：設定時間窗數量，注意，若該個案在某時間窗中沒有診斷資料，將會自動補0。  
-`isDescription`：解果承憲的特徵表是否顯示CCS的中文描述。  
+`isDescription`：結果呈現的特徵表是否顯示CCS的中文描述。  
 
 ```{r}
 head(length$DataFile_rec)
-forselect <- length$DataFile_rec[length$DataFile_rec$ID %in% match$ID,]
-forselect <- merge(forselect,pat_dm[,c("ID","label")],by="ID",all.x = T)
+#forselect <- length$DataFile_rec[length$DataFile_rec$ID %in% match$ID,]
+forselect <- merge(record_dm,pat_dm[,c("ID","label")],by="ID",all.x = T)
 feature <- selectFeature(DataFile = forselect,
                          ID = ID,
                          ICD = ICD,
@@ -165,10 +170,10 @@ feature涵蓋每個時間窗的篩選結果，有幾個時間窗就有幾個tabl
 `method`：分為"per window"以及"one window"兩種方法，兩種方法的差別在於DataFile_feature的不同，若是多時間窗的特徵篩選，此參數應設為"per window"，若是沒區分時間窗的特徵則設為"one window"。  
 
 ```{r}
-#DataFile_cutdata <- windowcut
-#DataFile_feature <- feature
 record_dm <- record_dm
 lengthdata <- unique(record_dm[,futime:=max(date)-min(date),by="ID"][,.(ID,futime)])
+# lengthdata <- unique(length$DataFile_rec[,futime:=max(date)-min(date),by="ID"][,.(ID,futime)])
+
 personal <- merge(pat_dm[,.(ID,label,SEX,age),],lengthdata,by="ID",all.x=T)
 head(windowcut[,1:10])
 head(feature)
@@ -177,7 +182,7 @@ head(personal)
 ```
 
 ```{r}
-coxmodel <- analyWindow_COX(DataFile_cutdata = windowcut,
+coxmodel <- analWindow_COX(DataFile_cutdata = windowcut,
                          window_N = window_N,
                          ID = ID,
                          DataFile_feature = feature,
@@ -189,7 +194,7 @@ coxmodel <- analyWindow_COX(DataFile_cutdata = windowcut,
                          isDescription = F,
                          method = "per window",
                          N = 5)
-coxmodel[[1]]
+coxmodel[[1]] %>% head()
 
 ```
 
@@ -217,11 +222,19 @@ install_tensorflow()
 # check version
 packageVersion("keras")
 packageVersion("tensorflow")
-lstm <- analyWindow_LSTM(DataFile_cutdata=windowcut,
+# lstm <- analWindow_LSTM(DataFile_cutdata=windowcut,
+#                          window_N,
+#                          ID,
+#                          periodage=NULL,
+#                          DataFile_personal=personal,
+#                          label,
+#                          predictor=c("SEX"),
+#                          N=5)
+lstm <- analWindow_LSTM(DataFile_cutdata=windowcut,
                          window_N,
                          ID,
                          periodage=NULL,
-                         DataFile_personal=personal,
+                         DataFile_personal=pat_dm,
                          label,
                          predictor=c("SEX"),
                          N=5)
@@ -229,6 +242,38 @@ lstm <- analyWindow_LSTM(DataFile_cutdata=windowcut,
 model <- lstm[[1]]
 x_test <- lstm[[2]]
 y_test <- lstm[[3]]
-model %>% evaluate(x_test, y_test, batch_size = 100)
-model %>% predict(x_test, y_test, batch_size = 100)
+model %>% evaluate(x_test, y_test, batch_size = 100) 
+model %>% predict(x_test, y_test, batch_size = 100) %>% head()
+```
+### 七、視覺化
+視覺化功能分成三個部分，皆可由前述功能產出的資料直接匯入，輸出視覺化的圖片。  
+####  grouped code時間窗視覺化。    
+將各時間窗內的各疾病數量以grouped codes的方式視覺化。
+DataFile_cutdata可由cutWindow()的輸出獲得。
+```{r}
+head(windowcut)
+plotWindow(DataFile_cutdata = windowcut)
+```
+
+####  Hazard ratio視覺化  
+將生存分析後的hazard ratio進行視覺化。  
+DataFile為從analWindow_COX的輸出可獲得，pvalue為使用者設定。
+```{r}
+head(coxmodel$model_table[[2]])
+plotHR(DataFile = coxmodel$model_table[[2]],
+       pvalue = 0.05)
+```
+
+#### 生存區線視覺化  
+將視覺化將病例組與對照組的生存曲線轉換成grouped code，進行視覺化。  
+var中填入使用者要看的ccs category。
+
+```{r}
+plotSurv(DataFile = record_dm,
+         ID = ID,
+         ICD = ICD,
+         date = date,
+         DataFile_personal = pat_dm,
+         label = label,
+         var = 1)
 ```
