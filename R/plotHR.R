@@ -1,22 +1,27 @@
 plotHR <- function(DataFile,pvalue){
-  df <- data.frame(boxLabels = DataFile$CCS_CATEGORY,
-                   yAxis = length(DataFile$CCS_CATEGORY):1,
-                   boxOdds = as.numeric(DataFile$`exp(coef)`),
+
+  DataFile$CCS_CATEGORY <- gsub(pattern = '`',replacement = '',x = DataFile$CCS_CATEGORY)
+  DataFile <- merge(DataFile,unique(ccstable[,.(CCS_CATEGORY,CCS_CATEGORY_DESCRIPTION)]),all.x = T)
+  df <- data.frame(boxLabels = DataFile$CCS_CATEGORY_DESCRIPTION,
+                   yAxis = length(DataFile$CCS_CATEGORY_DESCRIPRION):1,
+                   boxHRs = as.numeric(DataFile$`exp(coef)`),
                    boxCILow = as.numeric(DataFile$`lower .95`),
                    boxCIHigh = as.numeric(DataFile$`upper .95`),
                    pvalue = as.numeric(DataFile$`Pr(>|z|)`))
   setDT(df)
   pvalue_limit = pvalue
   label = paste("Model p <",pvalue_limit)
-  p <- ggplot(df[pvalue < pvalue_limit], aes(x = boxLabels, y = boxOdds, ymin = boxCILow, ymax = boxCIHigh)) +
-    geom_pointrange(aes(col = boxLabels), size = 0.2,color = "blue")+
-    geom_hline(yintercept =1,linetype = 2)+
-    geom_errorbar(aes(ymin = boxCILow, ymax = boxCIHigh, col = boxLabels),width = 0.5,cex = 0.9)+
+  p <- ggplot(df[pvalue < pvalue_limit], aes(x = boxLabels, y = boxHRs)) +
+    geom_errorbar(aes(ymin = boxCILow, ymax = boxCIHigh),width = 0.5,cex = 0.9,color="black") +
+    geom_point(size = 1, color = "orange") +
+    #geom_pointrange(aes(col = boxLabels),size=0.3,color = "blue") +
     coord_flip() +
-    annotate(geom = "text", y =30, x = 1, label =label, size = 3.5, hjust = 0) +
+    theme(legend.position="none",
+          axis.text.y = element_text(size=rel(0.5),angle=0,hjust=1),
+          panel.background = element_rect(fill = "white", color = "black"),
+          panel.grid = element_line(color = "grey80", size = 0.5)) +
+    annotate(geom = "text", y =Inf, x = -Inf, label =label,vjust = -1 ,hjust= 1.5,size = 3.5) +
     ylab("Hazard ratio") +
-    xlab("") +
-    theme(legend.position="none",panel.background = element_rect(fill = "white", color = "black"),	panel.grid = element_line(color = "grey80", size = 0.5)) +
-    geom_point(size = 1, color = "black")
+    xlab("CCScategory")
   return(p)
 }

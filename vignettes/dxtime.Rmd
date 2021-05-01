@@ -252,7 +252,7 @@ model %>% predict(x_test, y_test, batch_size = 100) %>% head()
 DataFile_cutdata可由cutWindow()的輸出獲得。
 ```{r}
 head(windowcut)
-plotWindow(DataFile_cutdata = windowcut)
+plotWindow(DataFile_cutdata = windowcut,method="ccslevel")
 ```
 
 ####  Hazard ratio視覺化  
