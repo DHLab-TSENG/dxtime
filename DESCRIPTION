@@ -20,7 +20,9 @@ Imports:
     survival,
     keras,
     tidyr,
-    dxpr
+    dxpr,
+    GGally,
+    ggplot2
 Remotes:
     DHLab-TSENG/dxpr
 Depends: 
