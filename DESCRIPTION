@@ -12,7 +12,8 @@ LazyData: true
 VignetteBuilder: knitr
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 Imports:
     data.table,
     purrr,
@@ -27,4 +28,4 @@ Remotes:
     DHLab-TSENG/dxpr
 Depends: 
     R (>= 2.10)
-    
+Config/testthat/edition: 3
