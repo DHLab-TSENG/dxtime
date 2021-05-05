@@ -1,17 +1,12 @@
-selectFeature <- function(DataFile,ID,ICD,date,BIRTHDAY=NULL,label,casecount_limit,type="single",isDescription=F,predictwindow,window=NULL,N=NULL,icdcount){
+selectFeature <- function(DataFile,ID,ICD,date,label,casecount_limit,type="single",isDescription=F,window,predictwindow,N=NULL,icdcount){
   if(is.null(N)){N <- 1}
   DataFile <- as.data.table(DataFile)
-  if(is.null(BIRTHDAY)){
-    dataCol <- c(deparse(substitute(ID)),deparse(substitute(ICD)),deparse(substitute(date)),deparse(substitute(label)))
-  }else{
-    dataCol <- c(deparse(substitute(ID)),deparse(substitute(ICD)),deparse(substitute(date)),deparse(substitute(label)),deparse(substitute(BIRTHDAY)))
-  }
+
+  dataCol <- c(deparse(substitute(ID)),deparse(substitute(ICD)),deparse(substitute(date)),deparse(substitute(label)))
+
   DataFile <- DataFile[,dataCol,with = FALSE]
-  if(is.null(BIRTHDAY)){
-    cutdata <- cutWindow(DataFile, ID, ICD, date, predictwindow=predictwindow , window=window , N=N , icdcount=icdcount)
-  }else{
-    cutdata <- cutWindow(DataFile, ID, ICD, date, BIRTHDAY, predictwindow=predictwindow , window=window , N=N , icdcount=icdcount)
-  }
+  cutdata <- cutWindow(DataFile, ID, ICD, date, predictwindow=predictwindow , window=window , N=N , icdcount=icdcount)
+
 
   COXccs_summary <- list()
   for(i in 1:N){
@@ -62,10 +57,10 @@ selectFeature <- function(DataFile,ID,ICD,date,BIRTHDAY=NULL,label,casecount_lim
     }else{
       COXccs <- COXccs[, c("CCS_CATEGORY","exp(coef)","Pr(>|z|)","count")]
     }
-
-    COXccs <- COXccs[`Pr(>|z|)` < 0.05 & "case count" > casecount_limit , c("selected") := TRUE]
+    COXccs <- COXccs[count>0]
+    COXccs <- COXccs[`Pr(>|z|)` < 0.05 & count > casecount_limit , c("selected") := TRUE]
     COXccs[is.na(COXccs$selected),"selected"] <- FALSE
-    setnames(COXccs,c("exp(coef)","count"),c("HR","case count"))
+    setnames(COXccs,c("exp(coef)","count"),c("HR","caseCount"))
     COXccs_summary[[i]] <- COXccs
 
   }

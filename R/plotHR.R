@@ -2,8 +2,9 @@ plotHR <- function(DataFile,pvalue){
 
   DataFile$CCS_CATEGORY <- gsub(pattern = '`',replacement = '',x = DataFile$CCS_CATEGORY)
   DataFile <- merge(DataFile,unique(ccstable[,.(CCS_CATEGORY,CCS_CATEGORY_DESCRIPTION)]),all.x = T)
+  DataFile[is.na(CCS_CATEGORY_DESCRIPTION),CCS_CATEGORY_DESCRIPTION:= CCS_CATEGORY]
   df <- data.frame(boxLabels = DataFile$CCS_CATEGORY_DESCRIPTION,
-                   yAxis = length(DataFile$CCS_CATEGORY_DESCRIPRION):1,
+                   yAxis = length(DataFile$CCS_CATEGORY_DESCRIPTION):1,
                    boxHRs = as.numeric(DataFile$`exp(coef)`),
                    boxCILow = as.numeric(DataFile$`lower .95`),
                    boxCIHigh = as.numeric(DataFile$`upper .95`),
@@ -17,7 +18,7 @@ plotHR <- function(DataFile,pvalue){
     #geom_pointrange(aes(col = boxLabels),size=0.3,color = "blue") +
     coord_flip() +
     theme(legend.position="none",
-          axis.text.y = element_text(size=rel(0.5),angle=0,hjust=1),
+          axis.text.y = element_text(size=rel(0.8),angle=0,hjust=1),
           panel.background = element_rect(fill = "white", color = "black"),
           panel.grid = element_line(color = "grey80", size = 0.5)) +
     annotate(geom = "text", y =Inf, x = -Inf, label =label,vjust = -1 ,hjust= 1.5,size = 3.5) +

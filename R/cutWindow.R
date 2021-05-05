@@ -1,4 +1,4 @@
-cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,BIRTHDAY,predictwindow,window=NULL,N=NULL,icdcount){
+cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,agelayer = 45,BIRTHDAY=NULL,predictwindow,window=NULL,N=NULL,icdcount){
 
   library(dxpr)
    #####建function，ccswide_summary和ccswide_followindow
@@ -34,7 +34,7 @@ cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,BIRTHDAY,p
                                           icdColName = ICD,
                                           dateColName = date,
                                           isDescription = FALSE,
-                                          icd10usingDate = "1966-01-01")
+                                          icd10usingDate = "1996-01-01")
 
         CCSWide_followindow <- groupedDataLongToWide(dxDataFile = CCSLong_followindow$groupedDT,
                                                      idColName = ID,
@@ -65,7 +65,7 @@ cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,BIRTHDAY,p
             periodage <- round(age[,((indexdate-predictwindow-i*window)-BIRTHDAY)/365.25,],digits = 2)
             CCSWide_followindow <- cbind(periodage,CCSWide_followindow)
             if(binaryage){
-              CCSWide_followindow[,periodage:=lapply(.SD,function(x)ifelse(x>45,1,0)),.SDcols="periodage"]
+              CCSWide_followindow[,periodage:=lapply(.SD,function(x)ifelse(x>agelayer,1,0)),.SDcols="periodage"]
             }
           }
           return(CCSWide_followindow)
@@ -85,7 +85,7 @@ cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,BIRTHDAY,p
                               icdColName = ICD,
                               dateColName = date,
                               isDescription = FALSE,
-                              icd10usingDate = "1966-01-01")
+                              icd10usingDate = "1996-01-01")
 
         CCSWide <- groupedDataLongToWide(dxDataFile = CCSLong$groupedDT,
                                          idColName = ID,
@@ -141,7 +141,7 @@ cutWindow <- function(DataFile,ID,ICD,date,getPeriodage=F,binaryage=F,BIRTHDAY,p
   if(getPeriodage){
     CCSWide_summary$periodage <- as.character(CCSWide_summary$periodage)
     if(binaryage){
-      CCSWide_summary[,periodage:=lapply(.SD,function(x)ifelse(x>45,1,0)),.SDcols="periodage"]
+      CCSWide_summary[,periodage:=lapply(.SD,function(x)ifelse(x>agelayer,1,0)),.SDcols="periodage"]
     }
   }else{
     CCSWide_summary$periodage <- NULL

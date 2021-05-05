@@ -1,16 +1,15 @@
 analWindow_COX <- function(DataFile_cutdata,window_N,ID,DataFile_feature,DataFile_personal,label,futime,predictor=c(),periodage=NULL,isDescription=F,method,N){
 
   cutdata <- as.data.table(DataFile_cutdata)
-  ccscategory <- unique(c(ccsDxICD9$CCS_CATEGORY))
+  ccscategory <- unique(c(ccstable$CCS_CATEGORY))
   dataCol <- c(deparse(substitute(window_N)),deparse(substitute(ID)),ccscategory)
   cutdata <- cutdata[, dataCol,with=FALSE]
+  names(cutdata) <- c("window_N","ID",ccscategory)
 
   DataFile_personal <- as.data.table(DataFile_personal)
-
   dataCol <- c(deparse(substitute(ID)),deparse(substitute(label)),deparse(substitute(futime)),predictor)
-
   DataFile_personal <- DataFile_personal[, dataCol, with=FALSE]
-
+  names(DataFile_personal) <- c("ID","label","futime",predictor)
 
   if(! is.na(method)){
 
@@ -59,7 +58,7 @@ analWindow_COX <- function(DataFile_cutdata,window_N,ID,DataFile_feature,DataFil
       #####加入文字敘述及數量
       CCSWide_num <- setDT(tcutdata)[,lapply(tcutdata[,3:ncol(tcutdata)],sum),]
       #CCSWide_num <- gather(CCSWide_num,key=CCS_CATEGORY,value=count)
-      CCSWide_num <- melt(setDT(CCSWide_num), na.rm = TRUE)[,.(CCS_CATEGORY=variable,count=value)]
+      CCSWide_num <- melt(setDT(CCSWide_num), na.rm = TRUE)[,.(CCS_CATEGORY=variable,caseCount=value)]
       CCSWide_num$CCS_CATEGORY <- paste0("`",CCSWide_num$CCS_CATEGORY,"`")
       COXccs_window <- merge(COXccs_window,CCSWide_num,by="CCS_CATEGORY",all.x=T)
       if(isDescription==T){
