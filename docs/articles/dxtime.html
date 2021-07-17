@@ -67,7 +67,7 @@
       <h1 data-toc-skip>Getting started with dxtime</h1>
                         <h4 class="author">Yi-An, Chu</h4>
             
-            <h4 class="date">2021-06-12</h4>
+            <h4 class="date">2021-07-17</h4>
       
       
       <div class="hidden name"><code>dxtime.Rmd</code></div>
@@ -116,13 +116,11 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 <span class="co">#&gt; 5: 149 2015-09-30 2720</span>
 <span class="co">#&gt; 6: 149 2015-09-30 7840</span></code></pre></div>
 </div>
-<div id="功能說明" class="section level2">
+<div id="使用流程" class="section level2">
 <h2 class="hasAnchor">
-<a href="#%E5%8A%9F%E8%83%BD%E8%AA%AA%E6%98%8E" class="anchor"></a>功能說明</h2>
-<div id="一篩選符合研究長度之個案及診斷紀錄" class="section level3">
-<h3 class="hasAnchor">
-<a href="#%E4%B8%80%E7%AF%A9%E9%81%B8%E7%AC%A6%E5%90%88%E7%A0%94%E7%A9%B6%E9%95%B7%E5%BA%A6%E4%B9%8B%E5%80%8B%E6%A1%88%E5%8F%8A%E8%A8%BA%E6%96%B7%E7%B4%80%E9%8C%84" class="anchor"></a>一、篩選符合研究長度之個案及診斷紀錄</h3>
-<p>在對照病例研究，會探討回溯期間內的暴露因子與疾病發生的關係。隨著回溯時間長度越長，所囊括的暴露的危險因子會越多，樣本比較之下，將會造成「回溯時長較長的樣本，危險因子較多」的偏誤。<br>
+<a href="#%E4%BD%BF%E7%94%A8%E6%B5%81%E7%A8%8B" class="anchor"></a>使用流程</h2>
+<p><img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/overview.png"><br><img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/timeline.png"> ## 功能說明 ### 一、篩選符合研究長度之個案及診斷紀錄</p>
+<p>在病例對照研究，會探討回溯期間內的暴露因子與疾病發生的關係。隨著回溯時間長度越長，所囊括的暴露的危險因子會越多，樣本比較之下，將會造成「回溯時長較長的樣本，危險因子較多」的偏誤。<br>
 為避免這種偏誤，固定追蹤時長是較佳的作法。但每個樣本的發病日期(indexDate)並不相同，在filterCasesRecords()可回推追蹤時間，找出追蹤時間範圍內的診斷資料；此外，資料長度不足的樣本也可將之排除。</p>
 <p>主要需設定的參數有:<br><code>predictGap</code>: 預測天數，意指「想要於指標日多久前進行預測」。<br><code>exposurePeriod</code>：此研究所設定的危險因子暴露時長，將用於篩選時間範圍內的診斷紀錄。<br><code>includePeriodAtLeast</code>：病患須擁有的資料長度下限。結果將依設定將資料長度不足的個案於以排除，預設為0。<br><code>countICDAtLeast</code>：病患須擁有的資料筆數下限，若是診斷紀錄的筆數過少，有可能意味著該個案極少至此醫療單位看診，研究者可設定診斷紀錄的數量下限，來決定是否採納此個案之紀錄，預設為0。<br><code>align</code>：設定納入資料的方式，是由起始點往後(align=“left”)，或是預測點往回推(align=“right”)，預設為right。</p>
 <p>執行結束會產生兩種結果，分別是Patient(病患資料)及Record(診斷資料)。</p>
@@ -157,7 +155,6 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 <p>以上框結果說明：</p>
 <p>第一種結果<strong>Patient</strong>，該資料表顯示三個時間點，firstDate、predicDate、indexDate。 firstDate為第一筆診斷紀錄的日期；predictDate為預測資料的最後一個預測時間點，也就是indexDate-exposurePeriod；indexDate為最後一筆資料的時間點。 includePeriod計算該個案在predictDate之前的資料長度，而count計算該個案的診斷紀錄筆數，如符合研究設定的篩選條件(includePeriod&gt;includePeriodAtLeast &amp; count&gt;count_limit)的個案，在cri顯示TRUE，反之則為FALSE。</p>
 <p>第二種資料<strong>Record</strong>，從符合個案的資料中，篩選出符合研究長度(exposurePeriod)的診斷紀錄。</p>
-</div>
 <div id="二配對個案" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E4%BA%8C%E9%85%8D%E5%B0%8D%E5%80%8B%E6%A1%88" class="anchor"></a>二、配對個案</h3>
@@ -256,7 +253,7 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">DataFile_rec</span><span class="op">)</span>
 <span class="co">#&gt; NULL</span>
 <span class="va">record_dm</span> <span class="op">&lt;-</span> <span class="va">record_dm</span>
-<span class="va">lengthdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">record_dm</span><span class="op">[</span>,<span class="va">len</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,by<span class="op">=</span><span class="st">"ID"</span><span class="op">]</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">len</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>
+<span class="va">lengthdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">record_dm</span><span class="op">[</span>,<span class="va">dataLength</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,by<span class="op">=</span><span class="st">"ID"</span><span class="op">]</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">dataLength</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#lengthdata &lt;- unique(length$Record[,dataLength:=max(date)-min(date),by="ID"][,.(ID,dataLength)])</span>
 <span class="va">personal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">label</span>,<span class="va">gender</span>,<span class="va">age</span><span class="op">)</span>,<span class="op">]</span>,<span class="va">lengthdata</span>,by<span class="op">=</span><span class="st">"ID"</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
 
@@ -264,21 +261,21 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
                          DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
                          idColName <span class="op">=</span> <span class="va">ID</span>,
                          labelColName<span class="op">=</span><span class="va">label</span>,
-                         dataLengthColName <span class="op">=</span> <span class="va">len</span>,
+                         dataLengthColName <span class="op">=</span> <span class="va">dataLength</span>,
                          caseCountRate_limit <span class="op">=</span> <span class="fl">0.001</span>,
                          isDescription <span class="op">=</span> <span class="cn">T</span>,
                          pvalue<span class="op">=</span><span class="fl">0.05</span>,
-                         method <span class="op">=</span> <span class="st">"perWindow"</span>
+                         method <span class="op">=</span> <span class="st">"allWindow"</span>
                          <span class="op">)</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">feature</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt; 1:        ccs_1 0.000    0.998         3</span>
-<span class="co">#&gt; 2:       ccs_10 1.538    0.479        11</span>
-<span class="co">#&gt; 3:      ccs_102 0.000    0.997         8</span>
-<span class="co">#&gt; 4:      ccs_104 0.000    0.998         4</span>
-<span class="co">#&gt; 5:      ccs_106 0.000    0.997        13</span>
-<span class="co">#&gt; 6:      ccs_108 0.000    0.997         1</span>
+<span class="co">#&gt; 1:        ccs_1 1.182    0.869         6</span>
+<span class="co">#&gt; 2:       ccs_10 0.931    0.894        22</span>
+<span class="co">#&gt; 3:      ccs_102 0.409    0.380        13</span>
+<span class="co">#&gt; 4:      ccs_104 0.443    0.424        11</span>
+<span class="co">#&gt; 5:      ccs_106 0.188    0.100        25</span>
+<span class="co">#&gt; 6:      ccs_108 0.000    0.997         2</span>
 <span class="co">#&gt;                              CCS_CATEGORY_DESCRIPTION</span>
 <span class="co">#&gt; 1:                                       Tuberculosis</span>
 <span class="co">#&gt; 2: Immunizations and screening for infectious disease</span>
@@ -322,229 +319,29 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">feature</span><span class="op">)</span>
 <span class="co">#&gt; [[1]]</span>
 <span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt;   1:        ccs_1 0.000    0.998         3</span>
-<span class="co">#&gt;   2:       ccs_10 1.538    0.479        11</span>
-<span class="co">#&gt;   3:      ccs_102 0.000    0.997         8</span>
-<span class="co">#&gt;   4:      ccs_104 0.000    0.998         4</span>
-<span class="co">#&gt;   5:      ccs_106 0.000    0.997        13</span>
+<span class="co">#&gt;   1:        ccs_1 1.182    0.869         6</span>
+<span class="co">#&gt;   2:       ccs_10 0.931    0.894        22</span>
+<span class="co">#&gt;   3:      ccs_102 0.409    0.380        13</span>
+<span class="co">#&gt;   4:      ccs_104 0.443    0.424        11</span>
+<span class="co">#&gt;   5:      ccs_106 0.188    0.100        25</span>
 <span class="co">#&gt;  ---                                      </span>
-<span class="co">#&gt; 155:       ccs_94 2.677    0.106         7</span>
-<span class="co">#&gt; 156:       ccs_95 0.886    0.842        20</span>
-<span class="co">#&gt; 157:       ccs_96 0.000    0.996         3</span>
-<span class="co">#&gt; 158:       ccs_98 0.485    0.080        74</span>
-<span class="co">#&gt; 159:       ccs_99 0.464    0.295        21</span>
-<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
-<span class="co">#&gt;   1:                                               Tuberculosis</span>
-<span class="co">#&gt;   2:         Immunizations and screening for infectious disease</span>
-<span class="co">#&gt;   3:                                     Nonspecific chest pain</span>
-<span class="co">#&gt;   4:                        Other and ill-defined heart disease</span>
-<span class="co">#&gt;   5:                                       Cardiac dysrhythmias</span>
-<span class="co">#&gt;  ---                                                           </span>
-<span class="co">#&gt; 155:                        Other ear and sense organ disorders</span>
-<span class="co">#&gt; 156:                             Other nervous system disorders</span>
-<span class="co">#&gt; 157:                                      Heart valve disorders</span>
-<span class="co">#&gt; 158:                                     Essential hypertension</span>
-<span class="co">#&gt; 159: Hypertension with complications and secondary hypertension</span>
-<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
-<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
-<span class="co">#&gt;   2:               Infectious and parasitic diseases</span>
-<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
-<span class="co">#&gt;  ---                                                </span>
-<span class="co">#&gt; 155: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 156: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 157:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 158:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 159:              Diseases of the circulatory system</span>
-<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
-<span class="co">#&gt;   1:                                Bacterial infection    FALSE</span>
-<span class="co">#&gt;   2: Immunizations and screening for infectious disease    FALSE</span>
-<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;  ---                                                            </span>
-<span class="co">#&gt; 155:                                     Ear conditions    FALSE</span>
-<span class="co">#&gt; 156:                     Other nervous system disorders    FALSE</span>
-<span class="co">#&gt; 157:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt; 158:                                       Hypertension    FALSE</span>
-<span class="co">#&gt; 159:                                       Hypertension    FALSE</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; [[2]]</span>
-<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt;   1:        ccs_1 0.000    0.997         2</span>
-<span class="co">#&gt;   2:       ccs_10 0.562    0.571         9</span>
-<span class="co">#&gt;   3:      ccs_102 0.000    0.996        10</span>
-<span class="co">#&gt;   4:      ccs_104 0.934    0.947         6</span>
-<span class="co">#&gt;   5:      ccs_106 0.000    0.997        12</span>
-<span class="co">#&gt;  ---                                      </span>
-<span class="co">#&gt; 157:       ccs_94 0.000    0.997         5</span>
-<span class="co">#&gt; 158:       ccs_95 0.805    0.722        21</span>
-<span class="co">#&gt; 159:       ccs_96 0.000    0.997         3</span>
-<span class="co">#&gt; 160:       ccs_98 0.325    0.010        81</span>
-<span class="co">#&gt; 161:       ccs_99 1.269    0.745        10</span>
-<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
-<span class="co">#&gt;   1:                                               Tuberculosis</span>
-<span class="co">#&gt;   2:         Immunizations and screening for infectious disease</span>
-<span class="co">#&gt;   3:                                     Nonspecific chest pain</span>
-<span class="co">#&gt;   4:                        Other and ill-defined heart disease</span>
-<span class="co">#&gt;   5:                                       Cardiac dysrhythmias</span>
-<span class="co">#&gt;  ---                                                           </span>
-<span class="co">#&gt; 157:                        Other ear and sense organ disorders</span>
-<span class="co">#&gt; 158:                             Other nervous system disorders</span>
-<span class="co">#&gt; 159:                                      Heart valve disorders</span>
-<span class="co">#&gt; 160:                                     Essential hypertension</span>
-<span class="co">#&gt; 161: Hypertension with complications and secondary hypertension</span>
-<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
-<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
-<span class="co">#&gt;   2:               Infectious and parasitic diseases</span>
-<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
-<span class="co">#&gt;  ---                                                </span>
-<span class="co">#&gt; 157: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 158: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 159:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 160:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 161:              Diseases of the circulatory system</span>
-<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
-<span class="co">#&gt;   1:                                Bacterial infection    FALSE</span>
-<span class="co">#&gt;   2: Immunizations and screening for infectious disease    FALSE</span>
-<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;  ---                                                            </span>
-<span class="co">#&gt; 157:                                     Ear conditions    FALSE</span>
-<span class="co">#&gt; 158:                     Other nervous system disorders    FALSE</span>
-<span class="co">#&gt; 159:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt; 160:                                       Hypertension     TRUE</span>
-<span class="co">#&gt; 161:                                       Hypertension    FALSE</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; [[3]]</span>
-<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt;   1:       ccs_10 1.055    0.942        10</span>
-<span class="co">#&gt;   2:      ccs_102 0.000    0.997         5</span>
-<span class="co">#&gt;   3:      ccs_104 1.079    0.940         5</span>
-<span class="co">#&gt;   4:      ccs_106 0.000    0.997        11</span>
-<span class="co">#&gt;   5:      ccs_108 0.000    0.997         2</span>
-<span class="co">#&gt;  ---                                      </span>
-<span class="co">#&gt; 150:       ccs_94 0.000    0.996         8</span>
-<span class="co">#&gt; 151:       ccs_95 0.621    0.515        16</span>
-<span class="co">#&gt; 152:       ccs_96 0.000    0.997         2</span>
-<span class="co">#&gt; 153:       ccs_98 0.220    0.005        62</span>
-<span class="co">#&gt; 154:       ccs_99 1.241    0.832         4</span>
-<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
-<span class="co">#&gt;   1:         Immunizations and screening for infectious disease</span>
-<span class="co">#&gt;   2:                                     Nonspecific chest pain</span>
-<span class="co">#&gt;   3:                        Other and ill-defined heart disease</span>
-<span class="co">#&gt;   4:                                       Cardiac dysrhythmias</span>
-<span class="co">#&gt;   5:                  Congestive heart failure; nonhypertensive</span>
-<span class="co">#&gt;  ---                                                           </span>
-<span class="co">#&gt; 150:                        Other ear and sense organ disorders</span>
-<span class="co">#&gt; 151:                             Other nervous system disorders</span>
-<span class="co">#&gt; 152:                                      Heart valve disorders</span>
-<span class="co">#&gt; 153:                                     Essential hypertension</span>
-<span class="co">#&gt; 154: Hypertension with complications and secondary hypertension</span>
-<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
-<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
-<span class="co">#&gt;   2:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
-<span class="co">#&gt;  ---                                                </span>
-<span class="co">#&gt; 150: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 151: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 152:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 153:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 154:              Diseases of the circulatory system</span>
-<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
-<span class="co">#&gt;   1: Immunizations and screening for infectious disease    FALSE</span>
-<span class="co">#&gt;   2:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;  ---                                                            </span>
-<span class="co">#&gt; 150:                                     Ear conditions    FALSE</span>
-<span class="co">#&gt; 151:                     Other nervous system disorders    FALSE</span>
-<span class="co">#&gt; 152:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt; 153:                                       Hypertension     TRUE</span>
-<span class="co">#&gt; 154:                                       Hypertension    FALSE</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; [[4]]</span>
-<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt;   1:       ccs_10 1.092    0.904        10</span>
-<span class="co">#&gt;   2:      ccs_102 0.000    0.996         4</span>
-<span class="co">#&gt;   3:      ccs_104 0.000    0.997         1</span>
-<span class="co">#&gt;   4:      ccs_106 0.680    0.705         7</span>
-<span class="co">#&gt;   5:      ccs_108 0.000    0.997         1</span>
-<span class="co">#&gt;  ---                                      </span>
-<span class="co">#&gt; 148:       ccs_95 0.653    0.560        16</span>
-<span class="co">#&gt; 149:       ccs_96 0.000    0.996         3</span>
-<span class="co">#&gt; 150:       ccs_97 0.000    0.997         1</span>
-<span class="co">#&gt; 151:       ccs_98 0.247    0.010        55</span>
-<span class="co">#&gt; 152:       ccs_99 1.686    0.608         3</span>
+<span class="co">#&gt; 192:       ccs_95 0.913    0.834        42</span>
+<span class="co">#&gt; 193:       ccs_96 0.000    0.997         7</span>
+<span class="co">#&gt; 194:       ccs_97 0.000    0.997         1</span>
+<span class="co">#&gt; 195:       ccs_98 0.415    0.024        93</span>
+<span class="co">#&gt; 196:       ccs_99 0.410    0.223        23</span>
 <span class="co">#&gt;                                                                                                CCS_CATEGORY_DESCRIPTION</span>
-<span class="co">#&gt;   1:                                                                 Immunizations and screening for infectious disease</span>
-<span class="co">#&gt;   2:                                                                                             Nonspecific chest pain</span>
-<span class="co">#&gt;   3:                                                                                Other and ill-defined heart disease</span>
-<span class="co">#&gt;   4:                                                                                               Cardiac dysrhythmias</span>
-<span class="co">#&gt;   5:                                                                          Congestive heart failure; nonhypertensive</span>
+<span class="co">#&gt;   1:                                                                                                       Tuberculosis</span>
+<span class="co">#&gt;   2:                                                                 Immunizations and screening for infectious disease</span>
+<span class="co">#&gt;   3:                                                                                             Nonspecific chest pain</span>
+<span class="co">#&gt;   4:                                                                                Other and ill-defined heart disease</span>
+<span class="co">#&gt;   5:                                                                                               Cardiac dysrhythmias</span>
 <span class="co">#&gt;  ---                                                                                                                   </span>
-<span class="co">#&gt; 148:                                                                                     Other nervous system disorders</span>
-<span class="co">#&gt; 149:                                                                                              Heart valve disorders</span>
-<span class="co">#&gt; 150: Peri-; endo-; and myocarditis; cardiomyopathy (except that caused by tuberculosis or sexually transmitted disease)</span>
-<span class="co">#&gt; 151:                                                                                             Essential hypertension</span>
-<span class="co">#&gt; 152:                                                         Hypertension with complications and secondary hypertension</span>
-<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
-<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
-<span class="co">#&gt;   2:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
-<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
-<span class="co">#&gt;  ---                                                </span>
-<span class="co">#&gt; 148: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 149:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 150:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 151:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 152:              Diseases of the circulatory system</span>
-<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
-<span class="co">#&gt;   1: Immunizations and screening for infectious disease    FALSE</span>
-<span class="co">#&gt;   2:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt;  ---                                                            </span>
-<span class="co">#&gt; 148:                     Other nervous system disorders    FALSE</span>
-<span class="co">#&gt; 149:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt; 150:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt; 151:                                       Hypertension     TRUE</span>
-<span class="co">#&gt; 152:                                       Hypertension    FALSE</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; [[5]]</span>
-<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt;   1:        ccs_1 0.000    0.997         2</span>
-<span class="co">#&gt;   2:       ccs_10 1.412    0.638         7</span>
-<span class="co">#&gt;   3:      ccs_102 0.000    0.997         3</span>
-<span class="co">#&gt;   4:      ccs_104 0.000    0.997         1</span>
-<span class="co">#&gt;   5:      ccs_106 0.000    0.997         7</span>
-<span class="co">#&gt;  ---                                      </span>
-<span class="co">#&gt; 134:       ccs_94 0.803    0.829         6</span>
-<span class="co">#&gt; 135:       ccs_95 1.029    0.963        15</span>
-<span class="co">#&gt; 136:       ccs_96 0.000    0.997         2</span>
-<span class="co">#&gt; 137:       ccs_98 0.147    0.009        47</span>
-<span class="co">#&gt; 138:       ccs_99 2.346    0.402         2</span>
-<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
-<span class="co">#&gt;   1:                                               Tuberculosis</span>
-<span class="co">#&gt;   2:         Immunizations and screening for infectious disease</span>
-<span class="co">#&gt;   3:                                     Nonspecific chest pain</span>
-<span class="co">#&gt;   4:                        Other and ill-defined heart disease</span>
-<span class="co">#&gt;   5:                                       Cardiac dysrhythmias</span>
-<span class="co">#&gt;  ---                                                           </span>
-<span class="co">#&gt; 134:                        Other ear and sense organ disorders</span>
-<span class="co">#&gt; 135:                             Other nervous system disorders</span>
-<span class="co">#&gt; 136:                                      Heart valve disorders</span>
-<span class="co">#&gt; 137:                                     Essential hypertension</span>
-<span class="co">#&gt; 138: Hypertension with complications and secondary hypertension</span>
+<span class="co">#&gt; 192:                                                                                     Other nervous system disorders</span>
+<span class="co">#&gt; 193:                                                                                              Heart valve disorders</span>
+<span class="co">#&gt; 194: Peri-; endo-; and myocarditis; cardiomyopathy (except that caused by tuberculosis or sexually transmitted disease)</span>
+<span class="co">#&gt; 195:                                                                                             Essential hypertension</span>
+<span class="co">#&gt; 196:                                                         Hypertension with complications and secondary hypertension</span>
 <span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
 <span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
 <span class="co">#&gt;   2:               Infectious and parasitic diseases</span>
@@ -552,11 +349,11 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <span class="co">#&gt;   4:              Diseases of the circulatory system</span>
 <span class="co">#&gt;   5:              Diseases of the circulatory system</span>
 <span class="co">#&gt;  ---                                                </span>
-<span class="co">#&gt; 134: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 135: Diseases of the nervous system and sense organs</span>
-<span class="co">#&gt; 136:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 137:              Diseases of the circulatory system</span>
-<span class="co">#&gt; 138:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 192: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 193:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 194:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 195:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 196:              Diseases of the circulatory system</span>
 <span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
 <span class="co">#&gt;   1:                                Bacterial infection    FALSE</span>
 <span class="co">#&gt;   2: Immunizations and screening for infectious disease    FALSE</span>
@@ -564,104 +361,34 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
 <span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
 <span class="co">#&gt;  ---                                                            </span>
-<span class="co">#&gt; 134:                                     Ear conditions    FALSE</span>
-<span class="co">#&gt; 135:                     Other nervous system disorders    FALSE</span>
-<span class="co">#&gt; 136:                              Diseases of the heart    FALSE</span>
-<span class="co">#&gt; 137:                                       Hypertension     TRUE</span>
-<span class="co">#&gt; 138:                                       Hypertension    FALSE</span>
+<span class="co">#&gt; 192:                     Other nervous system disorders    FALSE</span>
+<span class="co">#&gt; 193:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 194:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 195:                                       Hypertension     TRUE</span>
+<span class="co">#&gt; 196:                                       Hypertension    FALSE</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">personal</span><span class="op">)</span>
-<span class="co">#&gt;     ID label gender age       len</span>
-<span class="co">#&gt; 1:   1     0      F  50 1959 days</span>
-<span class="co">#&gt; 2:  10     0      F  71 1673 days</span>
-<span class="co">#&gt; 3: 100     0      M  75 1070 days</span>
-<span class="co">#&gt; 4: 101     0      M  60 6370 days</span>
-<span class="co">#&gt; 5: 102     0      M  45 2367 days</span>
-<span class="co">#&gt; 6: 103     0      M  24  672 days</span></code></pre></div>
+<span class="co">#&gt;     ID label gender age dataLength</span>
+<span class="co">#&gt; 1:   1     0      F  50  1959 days</span>
+<span class="co">#&gt; 2:  10     0      F  71  1673 days</span>
+<span class="co">#&gt; 3: 100     0      M  75  1070 days</span>
+<span class="co">#&gt; 4: 101     0      M  60  6370 days</span>
+<span class="co">#&gt; 5: 102     0      M  45  2367 days</span>
+<span class="co">#&gt; 6: 103     0      M  24   672 days</span></code></pre></div>
 <p>另外，需設定的參數有：<br><code>predictorColName</code>：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>method</code> : 設有兩種方式將各時間區間的結果進行統計計算最後的預測結果，第一為加權的方式，method=“weighting”，第一為投票的方式，method=“vote”。<br>
 此外，根據放入的feature，函式自動會使用對應區間的特徵。</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">coxmodel2</span> <span class="op">&lt;-</span> <span class="fu">analWindow_Cox</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span>,
+<code class="sourceCode R"><span class="va">coxmodel</span> <span class="op">&lt;-</span> <span class="fu">analWindow_Cox</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span>,
                          DataFile_feature <span class="op">=</span> <span class="va">feature</span>,
                          DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
                          idColName <span class="op">=</span> <span class="va">ID</span>,
                          labelColName <span class="op">=</span> <span class="va">label</span>,
-                         dataLengthColName <span class="op">=</span> <span class="va">len</span>,
-                         <span class="co">#predictorColName = c("gender"),</span>
-                         isDescription <span class="op">=</span> <span class="cn">F</span>,
+                         dataLengthColName <span class="op">=</span> <span class="va">dataLength</span>,
+                         predictorColName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span>,
+                         isDescription <span class="op">=</span> <span class="cn">T</span>,
                          testN <span class="op">=</span> <span class="fl">3</span>,
                          method<span class="op">=</span><span class="st">"weighting"</span><span class="op">)</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &gt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &gt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; same features in all windows</span>
+<span class="co">#&gt; Error in 1:N: NA/NaN argument</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt; Error in head(coxmodel$model_table[[1]]): object 'coxmodel' not found</span>
 <span class="va">coxmodel</span><span class="op">$</span><span class="va">evaluation_test</span>
@@ -692,26 +419,25 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
 <span class="co">#&gt; [1] '2.4.0'</span>
 
 <span class="va">personal</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">.SD</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="st">"F"</span>,<span class="fl">0L</span>,<span class="fl">1L</span><span class="op">)</span><span class="op">)</span>,.SDcols<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">]</span>
-<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM</span><span class="op">(</span>DataFile_cutData<span class="op">=</span><span class="va">windowcut</span><span class="op">[</span>,<span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"periodAge"</span><span class="op">)</span><span class="op">]</span>,
-                         DataFile_personal<span class="op">=</span><span class="va">personal</span>,
-                         labelColName <span class="op">=</span> <span class="va">label</span>,
-                         <span class="co">#predictorColName=c("gender"),</span>
-                         N<span class="op">=</span><span class="fl">3</span>,
-                        batch_size<span class="op">=</span><span class="fl">16</span>,
-                        Epoch<span class="op">=</span><span class="fl">10</span>,
-                        layer<span class="op">=</span><span class="fl">1</span>,
-                        <span class="co">#layer1_dropout = 0.2,</span>
-                        <span class="co"># layer1_units = 16,</span>
-                        <span class="co"># layer2_dropout = 0,</span>
-                        <span class="co"># layer2_units = 16,</span>
-                        <span class="co"># units=16,</span>
-                        testN<span class="op">=</span><span class="fl">1</span><span class="op">)</span>
-<span class="co">#&gt; optimal epoch is  3</span>
+<span class="co"># lstm &lt;- analWindow_LSTM(DataFile_cutData=windowcut[,-c("periodAge")],</span>
+<span class="co">#                          DataFile_personal=personal,</span>
+<span class="co">#                          labelColName = label,</span>
+<span class="co">#                          predictorColName=c("gender"),</span>
+<span class="co">#                          N=3,</span>
+<span class="co">#                         batch_size=16,</span>
+<span class="co">#                         Epoch=10,</span>
+<span class="co">#                         layer=1,</span>
+<span class="co">#                         #layer1_dropout = 0.2,</span>
+<span class="co">#                         # layer1_units = 16,</span>
+<span class="co">#                         # layer2_dropout = 0,</span>
+<span class="co">#                         # layer2_units = 16,</span>
+<span class="co">#                         # units=16,</span>
+<span class="co">#                         testN=2)</span>
 
 <span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM2</span><span class="op">(</span>DataFile_cutData<span class="op">=</span><span class="va">windowcut</span><span class="op">[</span>,<span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"periodAge"</span><span class="op">)</span><span class="op">]</span>,
                          DataFile_personal<span class="op">=</span><span class="va">personal</span>,
                          labelColName <span class="op">=</span> <span class="va">label</span>,
-                         <span class="co">#predictorColName=c("gender"),</span>
+                         predictorColName<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span>,
                          N<span class="op">=</span><span class="fl">3</span>,
                         batch_size<span class="op">=</span><span class="fl">10</span>,
                         Epoch<span class="op">=</span><span class="fl">10</span>,
@@ -729,18 +455,18 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
 <span class="va">x_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">x_test</span>
 <span class="va">y_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">y_test</span>
 <span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_train</span>
-<span class="co">#&gt; [1] 0.7542308 0.6751923 0.6411538 0.6507692 0.6803365</span>
+<span class="co">#&gt; [1] 0.7100000 0.6528846 0.6103846 0.6986538 0.6679807</span>
 <span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_test</span>
-<span class="co">#&gt; [1] 0.8308823 0.7892157 0.6642157 0.6960784 0.7450980</span>
+<span class="co">#&gt; [1] 0.7867647 0.8112745 0.7156863 0.6102941 0.7310049</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">model</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">x_test</span>, <span class="va">y_test</span>, batch_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt;            [,1]</span>
-<span class="co">#&gt; [1,] 0.05589366</span>
-<span class="co">#&gt; [2,] 0.15645063</span>
-<span class="co">#&gt; [3,] 0.11507106</span>
-<span class="co">#&gt; [4,] 0.18635646</span>
-<span class="co">#&gt; [5,] 0.08705586</span>
-<span class="co">#&gt; [6,] 0.15235451</span></code></pre></div>
+<span class="co">#&gt; [1,] 0.07285461</span>
+<span class="co">#&gt; [2,] 0.19018909</span>
+<span class="co">#&gt; [3,] 0.17290056</span>
+<span class="co">#&gt; [4,] 0.21653068</span>
+<span class="co">#&gt; [5,] 0.09134886</span>
+<span class="co">#&gt; [6,] 0.14686477</span></code></pre></div>
 </div>
 <div id="七視覺化" class="section level3">
 <h3 class="hasAnchor">
@@ -784,12 +510,7 @@ var中填入使用者要看的ccs category。</p>
          DataFile_personal <span class="op">=</span> <span class="va">pat_dm</span>,
          labelColName <span class="op">=</span> <span class="va">label</span>,
          varColName <span class="op">=</span> <span class="st">"Essential hypertension"</span><span class="op">)</span>
-<span class="co">#&gt; Wrong ICD format: total 226 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (1015)", "5640 (624)", "2500 (287)", "6009 (229)", "M791 (195)", "5714 (161)", "E780 (139)", "5210 (125)", "7805 (120)", "V670 (117)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Scale for 'colour' is already present. Adding another scale for 'colour',</span>
-<span class="co">#&gt; which will replace the existing scale.</span></code></pre></div>
-<p><img src="dxtime_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
+<span class="co">#&gt; Error in plotSurv(DataFile = record_dm, idColName = ID, icdColName = ICD, : unused arguments (icdColName = ICD, dateColName = date, varColName = "Essential hypertension")</span></code></pre></div>
 </div>
 </div>
 </div>
