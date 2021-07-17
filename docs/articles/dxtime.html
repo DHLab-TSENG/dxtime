@@ -67,7 +67,7 @@
       <h1 data-toc-skip>Getting started with dxtime</h1>
                         <h4 class="author">Yi-An, Chu</h4>
             
-            <h4 class="date">2021-05-07</h4>
+            <h4 class="date">2021-06-12</h4>
       
       
       <div class="hidden name"><code>dxtime.Rmd</code></div>
@@ -96,25 +96,25 @@
 <h2 class="hasAnchor">
 <a href="#%E7%AF%84%E4%BE%8B%E8%B3%87%E6%96%99" class="anchor"></a>範例資料</h2>
 <p>以下功能介紹皆以<code>pat_dm</code>以及<code>record_dm</code>做為範例。<br>
-pat_dm中共6000名個案，1000位病例組(label=1)，5000位為對照組(label=0);<br>
-record_dm為該6000名個案在指標日(發生疾病/最後一筆…)的之診斷紀錄。</p>
+pat_dm中共200名個案，170位病例組(label=1)，30位為對照組(label=0);<br>
+record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診斷紀錄。</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">pat_dm</span><span class="op">)</span>
-<span class="co">#&gt;      ID   BIRTHDAY SEX label   age</span>
-<span class="co">#&gt; 1: 5191 1931-06-15   F     0 67.36</span>
-<span class="co">#&gt; 2: 2360 1939-07-05   M     0 59.32</span>
-<span class="co">#&gt; 3: 4222 1960-09-25   F     0 38.08</span>
-<span class="co">#&gt; 4: 5739 1927-04-01   M     0 71.53</span>
-<span class="co">#&gt; 5: 5122 1936-04-09   F     0 60.57</span>
-<span class="co">#&gt; 6: 3205 1919-11-24   F     0 78.66</span>
+<span class="co">#&gt;    ID   birthday gender label age</span>
+<span class="co">#&gt; 1:  1 1956-03-18      F     0  50</span>
+<span class="co">#&gt; 2:  2 1976-04-26      M     0  42</span>
+<span class="co">#&gt; 3:  3 1950-06-02      M     0  68</span>
+<span class="co">#&gt; 4:  4 1984-10-21      M     0  33</span>
+<span class="co">#&gt; 5:  5 1944-08-01      M     0  74</span>
+<span class="co">#&gt; 6:  6 1982-11-27      M     0  32</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">record_dm</span><span class="op">)</span>
-<span class="co">#&gt;      ID  ICD       date</span>
-<span class="co">#&gt; 1: 5191 4019 1995-07-08</span>
-<span class="co">#&gt; 2: 5191 2720 1995-07-08</span>
-<span class="co">#&gt; 3: 5191 7840 1995-07-08</span>
-<span class="co">#&gt; 4: 5191 4019 1995-09-30</span>
-<span class="co">#&gt; 5: 5191 2720 1995-09-30</span>
-<span class="co">#&gt; 6: 5191 7840 1995-09-30</span></code></pre></div>
+<span class="co">#&gt;     ID       date  ICD</span>
+<span class="co">#&gt; 1: 149 2015-07-08 4019</span>
+<span class="co">#&gt; 2: 149 2015-07-08 2720</span>
+<span class="co">#&gt; 3: 149 2015-07-08 7840</span>
+<span class="co">#&gt; 4: 149 2015-09-30 4019</span>
+<span class="co">#&gt; 5: 149 2015-09-30 2720</span>
+<span class="co">#&gt; 6: 149 2015-09-30 7840</span></code></pre></div>
 </div>
 <div id="功能說明" class="section level2">
 <h2 class="hasAnchor">
@@ -123,481 +123,552 @@ record_dm為該6000名個案在指標日(發生疾病/最後一筆…)的之診�
 <h3 class="hasAnchor">
 <a href="#%E4%B8%80%E7%AF%A9%E9%81%B8%E7%AC%A6%E5%90%88%E7%A0%94%E7%A9%B6%E9%95%B7%E5%BA%A6%E4%B9%8B%E5%80%8B%E6%A1%88%E5%8F%8A%E8%A8%BA%E6%96%B7%E7%B4%80%E9%8C%84" class="anchor"></a>一、篩選符合研究長度之個案及診斷紀錄</h3>
 <p>在對照病例研究，會探討回溯期間內的暴露因子與疾病發生的關係。隨著回溯時間長度越長，所囊括的暴露的危險因子會越多，樣本比較之下，將會造成「回溯時長較長的樣本，危險因子較多」的偏誤。<br>
-為避免這種偏誤，固定追蹤時長是較佳的作法。但每個樣本的發病日期(indexday)並不相同，在filterCasesRecords()可回推追蹤時間，找出追蹤時間範圍內的診斷資料；此外，資料長度不足的樣本也可將之排除。</p>
-<p>需設定的參數有:<br><code>predictwindow</code>: 預測天數，意指「想要於指標日多久前進行預測」。<br><code>followindow</code>：此研究所設定的追蹤時長，將用於篩選時間範圍內的診斷紀錄。<br><code>dataLength_limit</code>：將資料長度不足的個案於以排除，預設為0。<br><code>count_limit</code>：若是診斷紀錄的筆數過少，有可能意味著該個案極少至此醫療單位看診，研究者可設定診斷紀錄的數量下限，來決定是否採納此個案之紀錄，預設為0。<br><code>align</code>：設定納入資料的方式，是由起始點往後(align=“left”)，或是預測點往回推(align=“right”)，預設為right。</p>
-<p>執行結束會產生兩種結果，分別是DataFile_pat及DataFile_rec。</p>
+為避免這種偏誤，固定追蹤時長是較佳的作法。但每個樣本的發病日期(indexDate)並不相同，在filterCasesRecords()可回推追蹤時間，找出追蹤時間範圍內的診斷資料；此外，資料長度不足的樣本也可將之排除。</p>
+<p>主要需設定的參數有:<br><code>predictGap</code>: 預測天數，意指「想要於指標日多久前進行預測」。<br><code>exposurePeriod</code>：此研究所設定的危險因子暴露時長，將用於篩選時間範圍內的診斷紀錄。<br><code>includePeriodAtLeast</code>：病患須擁有的資料長度下限。結果將依設定將資料長度不足的個案於以排除，預設為0。<br><code>countICDAtLeast</code>：病患須擁有的資料筆數下限，若是診斷紀錄的筆數過少，有可能意味著該個案極少至此醫療單位看診，研究者可設定診斷紀錄的數量下限，來決定是否採納此個案之紀錄，預設為0。<br><code>align</code>：設定納入資料的方式，是由起始點往後(align=“left”)，或是預測點往回推(align=“right”)，預設為right。</p>
+<p>執行結束會產生兩種結果，分別是Patient(病患資料)及Record(診斷資料)。</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#dxData &lt;- merge(record_dm,pat_dm[,c("ID","label")],by="ID",all.x=T)</span>
 <span class="va">length</span> <span class="op">&lt;-</span> <span class="fu">filterCasesRecords</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">record_dm</span>,
-                             ID <span class="op">=</span> <span class="va">ID</span>,
-                             ICD <span class="op">=</span> <span class="va">ICD</span>,
-                             date <span class="op">=</span> <span class="va">date</span>,
-                             predictWindow <span class="op">=</span> <span class="fl">180</span>, 
-                             folloWindow <span class="op">=</span> <span class="fl">3600</span>, 
-                             followedDataLength_limit <span class="op">=</span> <span class="fl">360</span>, 
-                             countICD_limit <span class="op">=</span> <span class="fl">2</span>,
+                             idColName <span class="op">=</span> <span class="va">ID</span>,
+                             icdColName <span class="op">=</span> <span class="va">ICD</span>,
+                             dateColName <span class="op">=</span> <span class="va">date</span>,
+                             predictGap <span class="op">=</span> <span class="fl">180</span>, 
+                             exposurePeriod <span class="op">=</span> <span class="fl">1800</span>, 
+                             includePeriodAtLeast <span class="op">=</span> <span class="fl">360</span>, 
+                             countICDAtLeast <span class="op">=</span> <span class="fl">2</span>,
                              align<span class="op">=</span><span class="st">"right"</span>
                              <span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">Patient</span><span class="op">)</span> 
-<span class="co">#&gt;      ID  firstDate predictDate  indexDate followedDataLength countICD  cri</span>
-<span class="co">#&gt; 1: 5191 1982-03-05  1998-04-27 1998-10-24               5897      167 TRUE</span>
-<span class="co">#&gt; 2: 2360 1981-10-17  1998-05-03 1998-10-30               6042       30 TRUE</span>
-<span class="co">#&gt; 3: 4222 1982-04-10  1998-04-29 1998-10-26               5863      610 TRUE</span>
-<span class="co">#&gt; 4: 5739 1981-07-24  1998-04-15 1998-10-12               6109      346 TRUE</span>
-<span class="co">#&gt; 5: 5122 1981-07-13  1996-05-06 1996-11-02               5411      120 TRUE</span>
-<span class="co">#&gt; 6: 3205 1981-03-26  1998-01-24 1998-07-23               6148      541 TRUE</span>
+<span class="co">#&gt;     ID  firstDate predictDate  indexDate includePeriod countICD  cri</span>
+<span class="co">#&gt; 1: 149 2002-03-05  2018-04-27 2018-10-24          5897      167 TRUE</span>
+<span class="co">#&gt; 2: 196 2006-10-21  2017-01-30 2017-07-29          3754      106 TRUE</span>
+<span class="co">#&gt; 3:  61 2001-05-13  2017-07-16 2018-01-12          5908       57 TRUE</span>
+<span class="co">#&gt; 4: 142 2001-02-09  2018-04-08 2018-10-05          6267     1020 TRUE</span>
+<span class="co">#&gt; 5:  98 2002-01-11  2004-01-08 2004-07-06           727      191 TRUE</span>
+<span class="co">#&gt; 6:   5 2014-01-16  2018-02-21 2018-08-20          1497      158 TRUE</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">Record</span><span class="op">)</span> 
-<span class="co">#&gt;      ID  ICD       date</span>
-<span class="co">#&gt; 1: 5191 4019 1995-07-08</span>
-<span class="co">#&gt; 2: 5191 2720 1995-07-08</span>
-<span class="co">#&gt; 3: 5191 7840 1995-07-08</span>
-<span class="co">#&gt; 4: 5191 4019 1995-09-30</span>
-<span class="co">#&gt; 5: 5191 2720 1995-09-30</span>
-<span class="co">#&gt; 6: 5191 7840 1995-09-30</span></code></pre></div>
+<span class="co">#&gt;     ID  ICD       date</span>
+<span class="co">#&gt; 1: 149 4019 2015-07-08</span>
+<span class="co">#&gt; 2: 149 2720 2015-07-08</span>
+<span class="co">#&gt; 3: 149 7840 2015-07-08</span>
+<span class="co">#&gt; 4: 149 4019 2015-09-30</span>
+<span class="co">#&gt; 5: 149 2720 2015-09-30</span>
+<span class="co">#&gt; 6: 149 7840 2015-09-30</span></code></pre></div>
 <p>以上框結果說明：</p>
-<p>第一種結果<code>DataFile_pat</code>，該資料表顯示三個時間點，firstdate、predicdate、indexdate。 firstdate為第一比診斷紀錄的日期；predictdate為預測資料的最後一個預測時間點，也就是indexdate-followindow；indexdate為最後一筆資料的時間點。 dataLength計算該個案在predictdate之前的資料長度，而n計算該個案的診斷紀錄筆數，如符合研究設定的篩選條件(dataLength&gt;dataLength_limit &amp; n&gt;count_limit)的個案，在cri顯示TRUE，反之則為FALSE。</p>
-<p>第二種資料<code>DataFile_rec</code>，從符合個案的資料中，篩選出符合研究長度(followindow)的診斷紀錄。</p>
+<p>第一種結果<strong>Patient</strong>，該資料表顯示三個時間點，firstDate、predicDate、indexDate。 firstDate為第一筆診斷紀錄的日期；predictDate為預測資料的最後一個預測時間點，也就是indexDate-exposurePeriod；indexDate為最後一筆資料的時間點。 includePeriod計算該個案在predictDate之前的資料長度，而count計算該個案的診斷紀錄筆數，如符合研究設定的篩選條件(includePeriod&gt;includePeriodAtLeast &amp; count&gt;count_limit)的個案，在cri顯示TRUE，反之則為FALSE。</p>
+<p>第二種資料<strong>Record</strong>，從符合個案的資料中，篩選出符合研究長度(exposurePeriod)的診斷紀錄。</p>
 </div>
 <div id="二配對個案" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E4%BA%8C%E9%85%8D%E5%B0%8D%E5%80%8B%E6%A1%88" class="anchor"></a>二、配對個案</h3>
-<p>避免干擾因子的影響，研究者可將重要的人口學特徵，例如:性別、年齡、種族等等進行配對，使對照組的人口學特徵的分布與病例組相似。在matchCases()使用傾向配對的方法，將配對變數置入羅吉斯回歸中，得到所有干擾因子的發病機率pscore。最後以pscore相同者配對，找出匹配病例組的對照組。<br>
-使用者須給定要匹配的變量以及label。將匹配變量以向量輸入至<code>matchedVariable</code>參數。結果會輸出被配對到個個案以及pscore。</p>
+<p>避免干擾因子的影響，研究者可將重要的人口學特徵，例如:性別、年齡、種族等等進行配對，使對照組的人口學特徵的分布與病例組相似。在matchCases()能使用兩種方法進行配對。<br>
+第一為method=“derict”，直接將干擾變數的條件相同者進行配對<br>
+第二為method=“pscore”，傾向配對法，將配對變數置入羅吉斯回歸中，得到所有干擾因子的發病機率pscore，最後以pscore相同者配對，找出匹配病例組的對照組。<br>
+使用者須給定要匹配的變量以及label。將匹配變量以向量輸入至<code>matchedVariable</code>參數。結果會輸出被配對到個個案以及傾向配對分數。</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">match</span> <span class="op">&lt;-</span> <span class="fu">matchCases</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">pat_dm</span>,
-                    ID <span class="op">=</span> <span class="va">ID</span>,
-                    label <span class="op">=</span> <span class="va">label</span>,
-                    matchedVariable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>,<span class="st">"SEX"</span><span class="op">)</span>
+                    idColName <span class="op">=</span> <span class="va">ID</span>,
+                    labelColName <span class="op">=</span> <span class="va">label</span>,
+                    matchedVariableColName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>,<span class="st">"gender"</span><span class="op">)</span>,
+                    method <span class="op">=</span> <span class="st">"pscore"</span>,
+                    ratio <span class="op">=</span> <span class="fl">5L</span>
                     <span class="op">)</span>
 <span class="co"># match &lt;- matchCases(DataFile = pat_dm %&gt;% filter(pat_dm$ID %in% length$DataFile_pat$ID),</span>
-<span class="co">#                     ID = ID,</span>
-<span class="co">#                     label = label,</span>
-<span class="co">#                     matchedVariable = c("age","SEX"))</span>
+<span class="co">#                     idColName = ID,</span>
+<span class="co">#                     labelColName = label,</span>
+<span class="co">#                     matchedVariable = c("age","gender"))</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">match</span><span class="op">)</span>
-<span class="co">#&gt;      ID label   age SEX    pscore</span>
-<span class="co">#&gt; 1: 5191     0 67.36   F 0.1691224</span>
-<span class="co">#&gt; 2: 2360     0 59.32   M 0.1826436</span>
-<span class="co">#&gt; 3: 4222     0 38.08   F 0.1070428</span>
-<span class="co">#&gt; 4: 5739     0 71.53   M 0.2179329</span>
-<span class="co">#&gt; 5: 5122     0 60.57   F 0.1525630</span>
-<span class="co">#&gt; 6: 3205     0 78.66   F 0.1998025</span>
+<span class="co">#&gt;    ID label age gender    pscore subclass</span>
+<span class="co">#&gt; 1:  1     0  50      F 0.0932471       28</span>
+<span class="co">#&gt; 2:  2     0  42      M 0.1534463       11</span>
+<span class="co">#&gt; 3:  3     0  68      M 0.1885943       17</span>
+<span class="co">#&gt; 4:  4     0  33      M 0.1425958        9</span>
+<span class="co">#&gt; 5:  5     0  74      M 0.1975325       16</span>
+<span class="co">#&gt; 6:  6     0  32      M 0.1414306       13</span>
 <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">match</span><span class="op">)</span>
-<span class="co">#&gt; [1] 6000</span></code></pre></div>
+<span class="co">#&gt; [1] 180</span></code></pre></div>
 </div>
 <div id="三切分時間窗" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E4%B8%89%E5%88%87%E5%88%86%E6%99%82%E9%96%93%E7%AA%97" class="anchor"></a>三、切分時間窗</h3>
 <p>隨著追蹤的時間點不同，其他疾病與觀察疾病的相關程度會有所不同，使用cutWindow()能將追蹤期間切分為數個時間窗，依照時間窗呈現出樣本罹患所有疾病的狀況，並且以grouped code的方式，將ICD以CCS分類，最後以二元碼的方式呈現。<br>
 在劃分時間窗時，除了群組編碼的轉換，也能進行年齡計算，由於年齡會隨時間變化，同一個樣本在不同時間窗的年齡會隨之推移，因此cutWindow()可在切分時間窗時一併進行窗內年齡的計算，最後可選擇以二元碼(預設以45歲為分界)或以實際數值的型態呈現。</p>
-<p>需設定的參數有:<br><code>getPeriodage</code>:預設為FALSE，如設定為TRUE，可利用BIRTHDAY計算出的每個時間窗的年齡periodage，以數字型態呈現，若需要以二元形式呈現，可用binaryage=T，預設會以45歲為分界，也可以使用agelayer自行設定。<br><code>predictwindow</code>: 預測天數，意指「想要於指標日多久前進行預測」。<br><code>window</code>：設定時間窗的長度。<br><code>N</code>：設定時間窗數量，注意：若該個案在某時間窗中沒有診斷資料，將會自動補0。<br><code>icdcount</code>：定義在追蹤期間，多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)。</p>
+<p>主要需設定的參數有:<br><code>birthdayColName</code>:此參數為計算年齡需使用到的參數，可利用birthday計算出的每個時間窗的年齡periodage並以數字型態呈現，若需要以二元形式呈現，可用<code>binaryage=T</code>，預設會以45歲為分界，也可以使用<code>agelayer</code>自行設定分界。若輸入資料沒包含生日，則不會進行區間年齡的計算。 <code>N</code>：設定時間窗數量，注意：若該個案在某時間窗中沒有診斷資料，將會自動補0。<br><code>countICD_toCCS</code>：定義在追蹤期間，多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)。</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># forcut &lt;- merge(length$DataFile_rec %&gt;% filter(ID %in% match$ID),pat_dm[,.(ID,BIRTHDAY)],all.x=T)</span>
-<span class="va">forcut</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">record_dm</span>,<span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">BIRTHDAY</span><span class="op">)</span><span class="op">]</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
+<code class="sourceCode R"><span class="co">#forcut &lt;- merge(length$Record %&gt;% filter(ID %in% match$ID),pat_dm[,.(ID,birthday)],all.x=T)</span>
+<span class="va">forcut</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">record_dm</span>,<span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">birthday</span><span class="op">)</span><span class="op">]</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">forcut</span><span class="op">)</span>
-<span class="co">#&gt;    ID   ICD       date   BIRTHDAY</span>
-<span class="co">#&gt; 1:  1  7823 1995-09-22 1956-12-29</span>
-<span class="co">#&gt; 2:  1  2859 1995-09-22 1956-12-29</span>
-<span class="co">#&gt; 3:  1  5829 1995-09-22 1956-12-29</span>
-<span class="co">#&gt; 4:  1  7823 1995-09-15 1956-12-29</span>
-<span class="co">#&gt; 5:  1 25000 1995-09-15 1956-12-29</span>
-<span class="co">#&gt; 6:  1 25040 1995-09-08 1956-12-29</span>
+<span class="co">#&gt;    ID       date   ICD   birthday</span>
+<span class="co">#&gt; 1:  1 2002-09-14  5649 1956-03-18</span>
+<span class="co">#&gt; 2:  1 2002-09-14  2724 1956-03-18</span>
+<span class="co">#&gt; 3:  1 2002-09-14 25000 1956-03-18</span>
+<span class="co">#&gt; 4:  1 2004-01-31  2500 1956-03-18</span>
+<span class="co">#&gt; 5:  1 2004-01-31  2724 1956-03-18</span>
+<span class="co">#&gt; 6:  1 2004-01-31  5649 1956-03-18</span>
 <span class="va">windowcut</span> <span class="op">&lt;-</span> <span class="fu">cutWindow</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">forcut</span> , 
-                       ID <span class="op">=</span> <span class="va">ID</span> ,
-                       ICD <span class="op">=</span> <span class="va">ICD</span> , 
-                       date <span class="op">=</span> <span class="va">date</span> ,
-                       BIRTHDAY <span class="op">=</span> <span class="va">BIRTHDAY</span> ,
-                       getPeriodage <span class="op">=</span> <span class="cn">T</span>,
+                       idColName <span class="op">=</span> <span class="va">ID</span> ,
+                       icdColName <span class="op">=</span> <span class="va">ICD</span> , 
+                       dateColName <span class="op">=</span> <span class="va">date</span> ,
+                       birthdayColName <span class="op">=</span> <span class="va">birthday</span> ,
                        binaryAge <span class="op">=</span> <span class="cn">T</span> ,
-                       ageLayer <span class="op">=</span> <span class="fl">30</span>,
-                       predictWindow <span class="op">=</span> <span class="fl">180</span> ,
+                       <span class="co">#ageLayer = 45,</span>
+                       predictGap <span class="op">=</span> <span class="fl">180</span> ,
                        window <span class="op">=</span> <span class="fl">360</span> , 
                        N <span class="op">=</span> <span class="fl">5</span> ,
-                       countICD_toccs <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>
-<span class="co">#&gt; Wrong ICD format: total 826 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("5640 (17580)", "585 (16535)", "2500 (9947)", "2740 (5934)", "6009 (5156)", "5210 (4940)", "5714 (4303)", "5234 (3902)", "6000 (3540)", "V048 (3250)")</span>
+                       countICD_toCCS <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>
+<span class="co">#&gt; Wrong ICD format: total 222 ICD codes (the number of occurrences is in brackets)</span>
+<span class="co">#&gt; c("585 (944)", "5640 (620)", "2500 (269)", "6009 (224)", "M791 (150)", "5714 (144)", "5210 (125)", "7805 (120)", "V670 (115)", "V048 (114)")</span>
 <span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD version: total 67 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("25000 (4)", "07030 (2)", "1550 (2)", "2449 (2)", "2724 (2)", "2761 (2)", "4019 (2)", "03849 (1)", "05319 (1)", "1533 (1)")</span>
+<span class="co">#&gt; Wrong ICD format: total 50 ICD codes (the number of occurrences is in brackets)</span>
+<span class="co">#&gt; c("585 (116)", "M791 (89)", "E780 (41)", "E784 (33)", "2500 (23)", "5714 (22)", "E11359 (19)", "V451 (17)", "F328 (15)", "T1490 (15)")</span>
 <span class="co">#&gt;  </span>
-<span class="co">#&gt; Warning: The ICD mentioned above matches to "NA" due to the format or other</span>
-<span class="co">#&gt; issues.</span>
-<span class="co">#&gt; Warning: "Wrong ICD format" means the ICD has wrong format</span>
-<span class="co">#&gt; Warning: "Wrong ICD version" means the ICD classify to wrong ICD version (cause</span>
-<span class="co">#&gt; the "icd10usingDate" or other issues)</span>
-<span class="co">#&gt; Wrong ICD format: total 327 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (1605)", "M791 (1036)", "E780 (903)", "5640 (830)", "K0532 (569)", "E11359 (559)", "2500 (381)", "Z2251 (344)", "E784 (272)", "6009 (257)")</span>
+<span class="co">#&gt; Wrong ICD format: total 64 ICD codes (the number of occurrences is in brackets)</span>
+<span class="co">#&gt; c("585 (132)", "M791 (61)", "E780 (54)", "E784 (48)", "H3532 (25)", "K0532 (24)", "2500 (22)", "E11359 (16)", "T1490 (16)", "5640 (15)")</span>
 <span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD version: total 9 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("1533 (1)", "2390 (1)", "2800 (1)", "28522 (1)", "34291 (1)", "34292 (1)", "43491 (1)", "4373 (1)", "V5789 (1)")</span>
+<span class="co">#&gt; Wrong ICD format: total 55 ICD codes (the number of occurrences is in brackets)</span>
+<span class="co">#&gt; c("585 (175)", "5640 (73)", "0414 (22)", "6009 (22)", "V155 (19)", "2554 (17)", "V135 (17)", "V048 (13)", "E780 (13)", "5888 (12)")</span>
 <span class="co">#&gt;  </span>
-<span class="co">#&gt; Warning: The ICD mentioned above matches to "NA" due to the format or other</span>
-<span class="co">#&gt; issues.</span>
-<span class="co">#&gt; Warning: "Wrong ICD format" means the ICD has wrong format</span>
-<span class="co">#&gt; Warning: "Wrong ICD version" means the ICD classify to wrong ICD version (cause</span>
-<span class="co">#&gt; the "icd10usingDate" or other issues)</span>
-<span class="co">#&gt; Wrong ICD format: total 329 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (1302)", "M791 (880)", "E780 (852)", "5640 (810)", "E11359 (546)", "K0532 (482)", "Z2251 (326)", "2500 (275)", "6009 (263)", "2740 (256)")</span>
+<span class="co">#&gt; Wrong ICD format: total 61 ICD codes (the number of occurrences is in brackets)</span>
+<span class="co">#&gt; c("585 (185)", "5640 (111)", "0414 (38)", "V155 (37)", "V135 (35)", "5997 (22)", "6009 (21)", "5234 (16)", "5210 (14)", "V048 (14)")</span>
 <span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD version: total 7 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("2761 (1)", "2768 (1)", "53011 (1)", "53390 (1)", "53540 (1)", "5781 (1)", "7948 (1)")</span>
+<span class="co">#&gt; Wrong ICD format: total 38 ICD codes (the number of occurrences is in brackets)</span>
+<span class="co">#&gt; c("585 (182)", "5640 (60)", "5210 (34)", "V048 (20)", "6009 (17)", "2740 (11)", "5997 (11)", "2500 (7)", "6000 (7)", "2429 (6)")</span>
 <span class="co">#&gt;  </span>
-<span class="co">#&gt; Warning: The ICD mentioned above matches to "NA" due to the format or other</span>
-<span class="co">#&gt; issues.</span>
-<span class="co">#&gt; Warning: "Wrong ICD format" means the ICD has wrong format</span>
-<span class="co">#&gt; Warning: "Wrong ICD version" means the ICD classify to wrong ICD version (cause</span>
-<span class="co">#&gt; the "icd10usingDate" or other issues)</span>
-<span class="co">#&gt; Wrong ICD format: total 281 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (2193)", "5640 (1875)", "6009 (628)", "2740 (493)", "5234 (482)", "5210 (460)", "6000 (443)", "5997 (333)", "V048 (314)", "7902 (302)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD version: total 52 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("25000 (4)", "07030 (2)", "1550 (2)", "2449 (2)", "2724 (2)", "4019 (2)", "03849 (1)", "05319 (1)", "1540 (1)", "1749 (1)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Warning: The ICD mentioned above matches to "NA" due to the format or other</span>
-<span class="co">#&gt; issues.</span>
-<span class="co">#&gt; Warning: "Wrong ICD format" means the ICD has wrong format</span>
-<span class="co">#&gt; Warning: "Wrong ICD version" means the ICD classify to wrong ICD version (cause</span>
-<span class="co">#&gt; the "icd10usingDate" or other issues)</span>
-<span class="co">#&gt; Wrong ICD format: total 229 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (2305)", "5640 (2089)", "6009 (751)", "5210 (562)", "5234 (552)", "6000 (543)", "2740 (514)", "V048 (375)", "5997 (351)", "7902 (333)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Warning: The ICD mentioned above matches to "NA" due to the format or other</span>
-<span class="co">#&gt; issues.</span>
-<span class="co">#&gt; Warning: "Wrong ICD format" means the ICD has wrong format</span>
-<span class="co">#&gt; Warning: "Wrong ICD version" means the ICD classify to wrong ICD version (cause</span>
-<span class="co">#&gt; the "icd10usingDate" or other issues)</span>
-<span class="co">#&gt; Wrong ICD format: total 194 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (1668)", "5640 (1624)", "6009 (704)", "5210 (595)", "5234 (517)", "2740 (511)", "6000 (507)", "V048 (345)", "7902 (287)", "2500 (272)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Warning: The ICD mentioned above matches to "NA" due to the format or other</span>
-<span class="co">#&gt; issues.</span>
-<span class="co">#&gt; Warning: "Wrong ICD format" means the ICD has wrong format</span>
-<span class="co">#&gt; Warning: "Wrong ICD version" means the ICD classify to wrong ICD version (cause</span>
-<span class="co">#&gt; the "icd10usingDate" or other issues)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>
-<span class="co">#&gt;    window_N periodAge   ID 1 2 3 4 5 6 7</span>
-<span class="co">#&gt; 1:        1         1    1 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 2:        1         1   10 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 3:        1         1  100 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 4:        1         1 1000 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 5:        1         1 1001 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 6:        1         1 1002 0 0 0 0 0 0 0</span></code></pre></div>
+<span class="co">#&gt;    window_N periodAge  ID ccs_1 ccs_2 ccs_3 ccs_4 ccs_5 ccs_6 ccs_7</span>
+<span class="co">#&gt; 1:        1         1   1     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 2:        1         1  10     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 3:        1         1 100     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 4:        1         1 101     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 5:        1         0 102     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 6:        1         0 103     1     0     0     0     0     0     0</span></code></pre></div>
 <p>以上述結果說明：<br>
-periodage代表該個案在該時間窗的年紀。1為大於等於45歲；0則反之。<br>
-window_N代表時間窗的次序，數字越小越接近指標日；此外window_N為0，是不分時間窗時的狀況。 其餘的數字欄位為CCS的編碼，1表示得到疾病，0則反之。</p>
+periodAge代表該個案在該時間窗的年紀。1為大於等於45歲；0則反之。<br>
+window_N代表時間窗的次序，數字越小越接近指標日；此外window_N為“all”，是不分時間窗時的狀況。 其餘的數字欄位為CCS的編碼，1表示得到疾病，0則反之。</p>
 </div>
 <div id="四選擇特徵" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E5%9B%9B%E9%81%B8%E6%93%87%E7%89%B9%E5%BE%B5" class="anchor"></a>四、選擇特徵</h3>
-<p>以grouped codes的方式，將ICD轉換成CCS，並且進行COX單變量回歸後，選出p-value&lt;0.05 &amp; 得病人數&gt;casecount_limit的特徵；<br>
-可以用全長度資料做一次特徵篩選(單時間窗)，也可以做多時間窗的特徵篩選。</p>
-<p>需設定的參數有：<br><code>icdcount</code>：定義多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)，每個window會分開計算。<br><code>casecount_limit</code>：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵。<br><code>predictwindow</code>: 預測天數，意指「想要於指標日多久前進行預測」。<br><code>window</code>：設定時間窗的長度。<br><code>N</code>：設定時間窗數量，注意，若該個案在某時間窗中沒有診斷資料，將會自動補0。<br><code>isDescription</code>：結果呈現的特徵表是否顯示CCS的中文描述。</p>
+<p>運用時間窗資料，將所有ccs為預測變數，進行Cox單變量回歸後，選出p-value&lt;0.05 &amp; 得病人數&gt;caseCountRate_limit的特徵；<br>
+可以用全長度資料做一次特徵篩選(method = “allWindow”)，也可以做多時間窗(method = “perWindow”)的特徵篩選。</p>
+<p>主要需設定的參數有：<br><code>caseCountRate_limit</code>：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵，此參數的單為為比例，因此不得大於1。<br><code>isDescription</code>：輸出結果是否具備ccs的中文描述。<br><code>method</code>: 選取特徵的方法，method = “perWindow”區分時間窗做特徵選取，method = “allWindow”為不區分時間窗的特徵選取。</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">DataFile_rec</span><span class="op">)</span>
 <span class="co">#&gt; NULL</span>
-<span class="co">#forselect &lt;- length$DataFile_rec[length$DataFile_rec$ID %in% match$ID,]</span>
-<span class="va">forselect</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">record_dm</span>,<span class="va">pat_dm</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"ID"</span>,<span class="st">"label"</span><span class="op">)</span><span class="op">]</span>,by<span class="op">=</span><span class="st">"ID"</span>,all.x <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>
-<span class="va">feature</span> <span class="op">&lt;-</span> <span class="fu">selectFeature</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">forselect</span>,
-                         ID <span class="op">=</span> <span class="va">ID</span>,
-                         ICD <span class="op">=</span> <span class="va">ICD</span>,
-                         date <span class="op">=</span> <span class="va">date</span>,
-                         label <span class="op">=</span> <span class="va">label</span>,
-                         countICD_toccs <span class="op">=</span> <span class="fl">2</span>,
-                         predictWindow <span class="op">=</span> <span class="fl">180</span>,
-                         casecountRate_limit <span class="op">=</span> <span class="fl">0.001</span>,
-                         <span class="co">#window = 360,</span>
-                         <span class="co">#N = 5,</span>
-                         isDescription <span class="op">=</span> <span class="cn">F</span>
-                         <span class="co">#type = "single"</span>
+<span class="va">record_dm</span> <span class="op">&lt;-</span> <span class="va">record_dm</span>
+<span class="va">lengthdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">record_dm</span><span class="op">[</span>,<span class="va">len</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,by<span class="op">=</span><span class="st">"ID"</span><span class="op">]</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">len</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>
+<span class="co">#lengthdata &lt;- unique(length$Record[,dataLength:=max(date)-min(date),by="ID"][,.(ID,dataLength)])</span>
+<span class="va">personal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">label</span>,<span class="va">gender</span>,<span class="va">age</span><span class="op">)</span>,<span class="op">]</span>,<span class="va">lengthdata</span>,by<span class="op">=</span><span class="st">"ID"</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
+
+<span class="va">feature</span> <span class="op">&lt;-</span> <span class="fu">selectFeature</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span>,
+                         DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
+                         idColName <span class="op">=</span> <span class="va">ID</span>,
+                         labelColName<span class="op">=</span><span class="va">label</span>,
+                         dataLengthColName <span class="op">=</span> <span class="va">len</span>,
+                         caseCountRate_limit <span class="op">=</span> <span class="fl">0.001</span>,
+                         isDescription <span class="op">=</span> <span class="cn">T</span>,
+                         pvalue<span class="op">=</span><span class="fl">0.05</span>,
+                         method <span class="op">=</span> <span class="st">"perWindow"</span>
                          <span class="op">)</span>
-<span class="co">#&gt; Wrong ICD format: total 826 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("5640 (17580)", "585 (16535)", "2500 (9947)", "2740 (5934)", "6009 (5156)", "5210 (4940)", "5714 (4303)", "5234 (3902)", "6000 (3540)", "V048 (3250)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD version: total 67 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("25000 (4)", "07030 (2)", "1550 (2)", "2449 (2)", "2724 (2)", "2761 (2)", "4019 (2)", "03849 (1)", "05319 (1)", "1533 (1)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Warning: The ICD mentioned above matches to "NA" due to the format or other</span>
-<span class="co">#&gt; issues.</span>
-<span class="co">#&gt; Warning: "Wrong ICD format" means the ICD has wrong format</span>
-<span class="co">#&gt; Warning: "Wrong ICD version" means the ICD classify to wrong ICD version (cause</span>
-<span class="co">#&gt; the "icd10usingDate" or other issues)</span>
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 1 ; coefficient may be infinite.</span>
-<span class="co">#&gt; Warning in melt.data.table(setDT(CCSWide_num), na.rm = TRUE): id.vars and</span>
-<span class="co">#&gt; measure.vars are internally guessed when both are 'NULL'. All non-numeric/</span>
-<span class="co">#&gt; integer/logical type columns are considered id.vars, which in this case are</span>
-<span class="co">#&gt; columns []. Consider providing at least one of 'id' or 'measure' vars in future.</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">feature</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
-<span class="co">#&gt;    CCS_CATEGORY        HR     Pr(&gt;|z|) caseCount selected</span>
-<span class="co">#&gt; 1:        `101` 1.1641601 8.792492e-01         5    FALSE</span>
-<span class="co">#&gt; 2:        `102` 0.6610711 1.166258e-03       458     TRUE</span>
-<span class="co">#&gt; 3:        `103` 0.7244539 5.772148e-01        23    FALSE</span>
-<span class="co">#&gt; 4:        `104` 1.2219787 1.798485e-01       190    FALSE</span>
-<span class="co">#&gt; 5:        `105` 0.3584471 1.472078e-01        26    FALSE</span>
-<span class="co">#&gt; 6:        `106` 0.5456724 1.701847e-06       560     TRUE</span></code></pre></div>
+<span class="co">#&gt;    CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt; 1:        ccs_1 0.000    0.998         3</span>
+<span class="co">#&gt; 2:       ccs_10 1.538    0.479        11</span>
+<span class="co">#&gt; 3:      ccs_102 0.000    0.997         8</span>
+<span class="co">#&gt; 4:      ccs_104 0.000    0.998         4</span>
+<span class="co">#&gt; 5:      ccs_106 0.000    0.997        13</span>
+<span class="co">#&gt; 6:      ccs_108 0.000    0.997         1</span>
+<span class="co">#&gt;                              CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt; 1:                                       Tuberculosis</span>
+<span class="co">#&gt; 2: Immunizations and screening for infectious disease</span>
+<span class="co">#&gt; 3:                             Nonspecific chest pain</span>
+<span class="co">#&gt; 4:                Other and ill-defined heart disease</span>
+<span class="co">#&gt; 5:                               Cardiac dysrhythmias</span>
+<span class="co">#&gt; 6:          Congestive heart failure; nonhypertensive</span>
+<span class="co">#&gt;                       CCS_LVL_1_LABEL</span>
+<span class="co">#&gt; 1:  Infectious and parasitic diseases</span>
+<span class="co">#&gt; 2:  Infectious and parasitic diseases</span>
+<span class="co">#&gt; 3: Diseases of the circulatory system</span>
+<span class="co">#&gt; 4: Diseases of the circulatory system</span>
+<span class="co">#&gt; 5: Diseases of the circulatory system</span>
+<span class="co">#&gt; 6: Diseases of the circulatory system</span>
+<span class="co">#&gt;                                       CCS_LVL_2_LABEL selected</span>
+<span class="co">#&gt; 1:                                Bacterial infection    FALSE</span>
+<span class="co">#&gt; 2: Immunizations and screening for infectious disease    FALSE</span>
+<span class="co">#&gt; 3:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 4:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 5:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 6:                              Diseases of the heart    FALSE</span></code></pre></div>
 <p>以上述結果說明： feature涵蓋每個時間窗的篩選結果，有幾個時間窗就有幾個table。<br>
-以第一個table舉例，HR為<code>100</code>的風險比率；Pr(&gt;|z|)為p-value；caseCount為該時間窗中共有多少個案患病，最後，若p-value&lt;0.05 &amp; caseCount&gt;casecount_limit會在selected顯示為TRUE。</p>
+以上圖輸出舉例，HR為風險比率；Pr(&gt;|z|)為p-value；caseCount為該時間窗中共有多少個案患病，最後，若p-value&lt;0.05 &amp; caseCount&gt;caseCountRate_limit*總人數的ccs，會在selected顯示為TRUE。</p>
 </div>
 <div id="五以cox回歸建立預測模型" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E4%BA%94%E4%BB%A5cox%E5%9B%9E%E6%AD%B8%E5%BB%BA%E7%AB%8B%E9%A0%90%E6%B8%AC%E6%A8%A1%E5%9E%8B" class="anchor"></a>五、以COX回歸建立預測模型</h3>
-<p>使用grouped codes的方式，用CCS為預測變量進行建模。 需提供三種資料表來進行建模。分別是<br>
+<p>使用grouped codes的方式，用ccs為預測變量進行建模。 需提供三種資料表來進行建模。分別是<br>
 1. <strong>DataFile_cutdata</strong>：劃分為時間窗的資料，使用cutWindow function可以獲得；<br>
 2. <strong>DataFile_feature</strong>：要放入作為預測變量的特徵；<br>
-3. <strong>DataFile_personal</strong>：個案資料，包含ID、label、SEX、age，若有需放入一併建模的特徵，也須於此表中提供欄位；<br>
-另外，需設定的參數有：<br><code>predictor</code>：除了CCS之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>method</code>：分為“per window”以及“one window”兩種方法，兩種方法的差別在於DataFile_feature的不同，若是多時間窗的特徵進行建模，此參數應設為“per window”，若是單時間窗的特徵進行建模則設為“one window”。</p>
+3. <strong>DataFile_personal</strong>：個案資料，包含ID、label、gender、age，若有需放入一併建模的特徵，也須於此表中提供欄位；</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">record_dm</span> <span class="op">&lt;-</span> <span class="va">record_dm</span>
-<span class="va">lengthdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">record_dm</span><span class="op">[</span>,<span class="va">dataLength</span> <span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,by<span class="op">=</span><span class="st">"ID"</span><span class="op">]</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">dataLength</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>
-<span class="co"># lengthdata &lt;- unique(length$DataFile_rec[,futime:=max(date)-min(date),by="ID"][,.(ID,futime)])</span>
-
-<span class="va">personal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">label</span>,<span class="va">SEX</span>,<span class="va">age</span><span class="op">)</span>,<span class="op">]</span>,<span class="va">lengthdata</span>,by<span class="op">=</span><span class="st">"ID"</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>
-<span class="co">#&gt;    window_N periodAge   ID 1 2 3 4 5 6 7</span>
-<span class="co">#&gt; 1:        1         1    1 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 2:        1         1   10 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 3:        1         1  100 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 4:        1         1 1000 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 5:        1         1 1001 0 0 0 0 0 0 0</span>
-<span class="co">#&gt; 6:        1         1 1002 0 0 0 0 0 0 0</span>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>
+<span class="co">#&gt;    window_N periodAge  ID ccs_1 ccs_2 ccs_3 ccs_4 ccs_5 ccs_6 ccs_7</span>
+<span class="co">#&gt; 1:        1         1   1     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 2:        1         1  10     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 3:        1         1 100     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 4:        1         1 101     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 5:        1         0 102     0     0     0     0     0     0     0</span>
+<span class="co">#&gt; 6:        1         0 103     1     0     0     0     0     0     0</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">feature</span><span class="op">)</span>
 <span class="co">#&gt; [[1]]</span>
-<span class="co">#&gt;      CCS_CATEGORY        HR     Pr(&gt;|z|) caseCount selected</span>
-<span class="co">#&gt;   1:        `101` 1.1641601 8.792492e-01         5    FALSE</span>
-<span class="co">#&gt;   2:        `102` 0.6610711 1.166258e-03       458     TRUE</span>
-<span class="co">#&gt;   3:        `103` 0.7244539 5.772148e-01        23    FALSE</span>
-<span class="co">#&gt;   4:        `104` 1.2219787 1.798485e-01       190    FALSE</span>
-<span class="co">#&gt;   5:        `105` 0.3584471 1.472078e-01        26    FALSE</span>
-<span class="co">#&gt;  ---                                                       </span>
-<span class="co">#&gt; 260:         `96` 0.7569383 1.331157e-01       196    FALSE</span>
-<span class="co">#&gt; 261:         `97` 1.5133521 1.377920e-01        46    FALSE</span>
-<span class="co">#&gt; 262:         `98` 0.7024964 3.477669e-08      2709     TRUE</span>
-<span class="co">#&gt; 263:         `99` 0.3116073 2.382931e-11       499     TRUE</span>
-<span class="co">#&gt; 264:          `9` 0.9763291 9.618647e-01        20    FALSE</span>
+<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt;   1:        ccs_1 0.000    0.998         3</span>
+<span class="co">#&gt;   2:       ccs_10 1.538    0.479        11</span>
+<span class="co">#&gt;   3:      ccs_102 0.000    0.997         8</span>
+<span class="co">#&gt;   4:      ccs_104 0.000    0.998         4</span>
+<span class="co">#&gt;   5:      ccs_106 0.000    0.997        13</span>
+<span class="co">#&gt;  ---                                      </span>
+<span class="co">#&gt; 155:       ccs_94 2.677    0.106         7</span>
+<span class="co">#&gt; 156:       ccs_95 0.886    0.842        20</span>
+<span class="co">#&gt; 157:       ccs_96 0.000    0.996         3</span>
+<span class="co">#&gt; 158:       ccs_98 0.485    0.080        74</span>
+<span class="co">#&gt; 159:       ccs_99 0.464    0.295        21</span>
+<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt;   1:                                               Tuberculosis</span>
+<span class="co">#&gt;   2:         Immunizations and screening for infectious disease</span>
+<span class="co">#&gt;   3:                                     Nonspecific chest pain</span>
+<span class="co">#&gt;   4:                        Other and ill-defined heart disease</span>
+<span class="co">#&gt;   5:                                       Cardiac dysrhythmias</span>
+<span class="co">#&gt;  ---                                                           </span>
+<span class="co">#&gt; 155:                        Other ear and sense organ disorders</span>
+<span class="co">#&gt; 156:                             Other nervous system disorders</span>
+<span class="co">#&gt; 157:                                      Heart valve disorders</span>
+<span class="co">#&gt; 158:                                     Essential hypertension</span>
+<span class="co">#&gt; 159: Hypertension with complications and secondary hypertension</span>
+<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
+<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   2:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
+<span class="co">#&gt;  ---                                                </span>
+<span class="co">#&gt; 155: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 156: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 157:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 158:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 159:              Diseases of the circulatory system</span>
+<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
+<span class="co">#&gt;   1:                                Bacterial infection    FALSE</span>
+<span class="co">#&gt;   2: Immunizations and screening for infectious disease    FALSE</span>
+<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;  ---                                                            </span>
+<span class="co">#&gt; 155:                                     Ear conditions    FALSE</span>
+<span class="co">#&gt; 156:                     Other nervous system disorders    FALSE</span>
+<span class="co">#&gt; 157:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 158:                                       Hypertension    FALSE</span>
+<span class="co">#&gt; 159:                                       Hypertension    FALSE</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[2]]</span>
+<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt;   1:        ccs_1 0.000    0.997         2</span>
+<span class="co">#&gt;   2:       ccs_10 0.562    0.571         9</span>
+<span class="co">#&gt;   3:      ccs_102 0.000    0.996        10</span>
+<span class="co">#&gt;   4:      ccs_104 0.934    0.947         6</span>
+<span class="co">#&gt;   5:      ccs_106 0.000    0.997        12</span>
+<span class="co">#&gt;  ---                                      </span>
+<span class="co">#&gt; 157:       ccs_94 0.000    0.997         5</span>
+<span class="co">#&gt; 158:       ccs_95 0.805    0.722        21</span>
+<span class="co">#&gt; 159:       ccs_96 0.000    0.997         3</span>
+<span class="co">#&gt; 160:       ccs_98 0.325    0.010        81</span>
+<span class="co">#&gt; 161:       ccs_99 1.269    0.745        10</span>
+<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt;   1:                                               Tuberculosis</span>
+<span class="co">#&gt;   2:         Immunizations and screening for infectious disease</span>
+<span class="co">#&gt;   3:                                     Nonspecific chest pain</span>
+<span class="co">#&gt;   4:                        Other and ill-defined heart disease</span>
+<span class="co">#&gt;   5:                                       Cardiac dysrhythmias</span>
+<span class="co">#&gt;  ---                                                           </span>
+<span class="co">#&gt; 157:                        Other ear and sense organ disorders</span>
+<span class="co">#&gt; 158:                             Other nervous system disorders</span>
+<span class="co">#&gt; 159:                                      Heart valve disorders</span>
+<span class="co">#&gt; 160:                                     Essential hypertension</span>
+<span class="co">#&gt; 161: Hypertension with complications and secondary hypertension</span>
+<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
+<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   2:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
+<span class="co">#&gt;  ---                                                </span>
+<span class="co">#&gt; 157: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 158: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 159:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 160:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 161:              Diseases of the circulatory system</span>
+<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
+<span class="co">#&gt;   1:                                Bacterial infection    FALSE</span>
+<span class="co">#&gt;   2: Immunizations and screening for infectious disease    FALSE</span>
+<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;  ---                                                            </span>
+<span class="co">#&gt; 157:                                     Ear conditions    FALSE</span>
+<span class="co">#&gt; 158:                     Other nervous system disorders    FALSE</span>
+<span class="co">#&gt; 159:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 160:                                       Hypertension     TRUE</span>
+<span class="co">#&gt; 161:                                       Hypertension    FALSE</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[3]]</span>
+<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt;   1:       ccs_10 1.055    0.942        10</span>
+<span class="co">#&gt;   2:      ccs_102 0.000    0.997         5</span>
+<span class="co">#&gt;   3:      ccs_104 1.079    0.940         5</span>
+<span class="co">#&gt;   4:      ccs_106 0.000    0.997        11</span>
+<span class="co">#&gt;   5:      ccs_108 0.000    0.997         2</span>
+<span class="co">#&gt;  ---                                      </span>
+<span class="co">#&gt; 150:       ccs_94 0.000    0.996         8</span>
+<span class="co">#&gt; 151:       ccs_95 0.621    0.515        16</span>
+<span class="co">#&gt; 152:       ccs_96 0.000    0.997         2</span>
+<span class="co">#&gt; 153:       ccs_98 0.220    0.005        62</span>
+<span class="co">#&gt; 154:       ccs_99 1.241    0.832         4</span>
+<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt;   1:         Immunizations and screening for infectious disease</span>
+<span class="co">#&gt;   2:                                     Nonspecific chest pain</span>
+<span class="co">#&gt;   3:                        Other and ill-defined heart disease</span>
+<span class="co">#&gt;   4:                                       Cardiac dysrhythmias</span>
+<span class="co">#&gt;   5:                  Congestive heart failure; nonhypertensive</span>
+<span class="co">#&gt;  ---                                                           </span>
+<span class="co">#&gt; 150:                        Other ear and sense organ disorders</span>
+<span class="co">#&gt; 151:                             Other nervous system disorders</span>
+<span class="co">#&gt; 152:                                      Heart valve disorders</span>
+<span class="co">#&gt; 153:                                     Essential hypertension</span>
+<span class="co">#&gt; 154: Hypertension with complications and secondary hypertension</span>
+<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
+<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   2:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
+<span class="co">#&gt;  ---                                                </span>
+<span class="co">#&gt; 150: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 151: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 152:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 153:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 154:              Diseases of the circulatory system</span>
+<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
+<span class="co">#&gt;   1: Immunizations and screening for infectious disease    FALSE</span>
+<span class="co">#&gt;   2:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;  ---                                                            </span>
+<span class="co">#&gt; 150:                                     Ear conditions    FALSE</span>
+<span class="co">#&gt; 151:                     Other nervous system disorders    FALSE</span>
+<span class="co">#&gt; 152:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 153:                                       Hypertension     TRUE</span>
+<span class="co">#&gt; 154:                                       Hypertension    FALSE</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[4]]</span>
+<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt;   1:       ccs_10 1.092    0.904        10</span>
+<span class="co">#&gt;   2:      ccs_102 0.000    0.996         4</span>
+<span class="co">#&gt;   3:      ccs_104 0.000    0.997         1</span>
+<span class="co">#&gt;   4:      ccs_106 0.680    0.705         7</span>
+<span class="co">#&gt;   5:      ccs_108 0.000    0.997         1</span>
+<span class="co">#&gt;  ---                                      </span>
+<span class="co">#&gt; 148:       ccs_95 0.653    0.560        16</span>
+<span class="co">#&gt; 149:       ccs_96 0.000    0.996         3</span>
+<span class="co">#&gt; 150:       ccs_97 0.000    0.997         1</span>
+<span class="co">#&gt; 151:       ccs_98 0.247    0.010        55</span>
+<span class="co">#&gt; 152:       ccs_99 1.686    0.608         3</span>
+<span class="co">#&gt;                                                                                                CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt;   1:                                                                 Immunizations and screening for infectious disease</span>
+<span class="co">#&gt;   2:                                                                                             Nonspecific chest pain</span>
+<span class="co">#&gt;   3:                                                                                Other and ill-defined heart disease</span>
+<span class="co">#&gt;   4:                                                                                               Cardiac dysrhythmias</span>
+<span class="co">#&gt;   5:                                                                          Congestive heart failure; nonhypertensive</span>
+<span class="co">#&gt;  ---                                                                                                                   </span>
+<span class="co">#&gt; 148:                                                                                     Other nervous system disorders</span>
+<span class="co">#&gt; 149:                                                                                              Heart valve disorders</span>
+<span class="co">#&gt; 150: Peri-; endo-; and myocarditis; cardiomyopathy (except that caused by tuberculosis or sexually transmitted disease)</span>
+<span class="co">#&gt; 151:                                                                                             Essential hypertension</span>
+<span class="co">#&gt; 152:                                                         Hypertension with complications and secondary hypertension</span>
+<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
+<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   2:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
+<span class="co">#&gt;  ---                                                </span>
+<span class="co">#&gt; 148: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 149:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 150:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 151:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 152:              Diseases of the circulatory system</span>
+<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
+<span class="co">#&gt;   1: Immunizations and screening for infectious disease    FALSE</span>
+<span class="co">#&gt;   2:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;  ---                                                            </span>
+<span class="co">#&gt; 148:                     Other nervous system disorders    FALSE</span>
+<span class="co">#&gt; 149:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 150:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 151:                                       Hypertension     TRUE</span>
+<span class="co">#&gt; 152:                                       Hypertension    FALSE</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[5]]</span>
+<span class="co">#&gt;      CCS_CATEGORY    HR Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt;   1:        ccs_1 0.000    0.997         2</span>
+<span class="co">#&gt;   2:       ccs_10 1.412    0.638         7</span>
+<span class="co">#&gt;   3:      ccs_102 0.000    0.997         3</span>
+<span class="co">#&gt;   4:      ccs_104 0.000    0.997         1</span>
+<span class="co">#&gt;   5:      ccs_106 0.000    0.997         7</span>
+<span class="co">#&gt;  ---                                      </span>
+<span class="co">#&gt; 134:       ccs_94 0.803    0.829         6</span>
+<span class="co">#&gt; 135:       ccs_95 1.029    0.963        15</span>
+<span class="co">#&gt; 136:       ccs_96 0.000    0.997         2</span>
+<span class="co">#&gt; 137:       ccs_98 0.147    0.009        47</span>
+<span class="co">#&gt; 138:       ccs_99 2.346    0.402         2</span>
+<span class="co">#&gt;                                        CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt;   1:                                               Tuberculosis</span>
+<span class="co">#&gt;   2:         Immunizations and screening for infectious disease</span>
+<span class="co">#&gt;   3:                                     Nonspecific chest pain</span>
+<span class="co">#&gt;   4:                        Other and ill-defined heart disease</span>
+<span class="co">#&gt;   5:                                       Cardiac dysrhythmias</span>
+<span class="co">#&gt;  ---                                                           </span>
+<span class="co">#&gt; 134:                        Other ear and sense organ disorders</span>
+<span class="co">#&gt; 135:                             Other nervous system disorders</span>
+<span class="co">#&gt; 136:                                      Heart valve disorders</span>
+<span class="co">#&gt; 137:                                     Essential hypertension</span>
+<span class="co">#&gt; 138: Hypertension with complications and secondary hypertension</span>
+<span class="co">#&gt;                                      CCS_LVL_1_LABEL</span>
+<span class="co">#&gt;   1:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   2:               Infectious and parasitic diseases</span>
+<span class="co">#&gt;   3:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   4:              Diseases of the circulatory system</span>
+<span class="co">#&gt;   5:              Diseases of the circulatory system</span>
+<span class="co">#&gt;  ---                                                </span>
+<span class="co">#&gt; 134: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 135: Diseases of the nervous system and sense organs</span>
+<span class="co">#&gt; 136:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 137:              Diseases of the circulatory system</span>
+<span class="co">#&gt; 138:              Diseases of the circulatory system</span>
+<span class="co">#&gt;                                         CCS_LVL_2_LABEL selected</span>
+<span class="co">#&gt;   1:                                Bacterial infection    FALSE</span>
+<span class="co">#&gt;   2: Immunizations and screening for infectious disease    FALSE</span>
+<span class="co">#&gt;   3:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   4:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;   5:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt;  ---                                                            </span>
+<span class="co">#&gt; 134:                                     Ear conditions    FALSE</span>
+<span class="co">#&gt; 135:                     Other nervous system disorders    FALSE</span>
+<span class="co">#&gt; 136:                              Diseases of the heart    FALSE</span>
+<span class="co">#&gt; 137:                                       Hypertension     TRUE</span>
+<span class="co">#&gt; 138:                                       Hypertension    FALSE</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">personal</span><span class="op">)</span>
-<span class="co">#&gt;      ID label SEX   age dataLength</span>
-<span class="co">#&gt; 1:    1     1   M 39.02  3033 days</span>
-<span class="co">#&gt; 2:   10     1   M 70.14  3934 days</span>
-<span class="co">#&gt; 3:  100     1   M 42.24    31 days</span>
-<span class="co">#&gt; 4: 1000     1   M 45.20  3222 days</span>
-<span class="co">#&gt; 5: 1001     0   F 89.50  6321 days</span>
-<span class="co">#&gt; 6: 1002     0   M 37.78  6472 days</span></code></pre></div>
+<span class="co">#&gt;     ID label gender age       len</span>
+<span class="co">#&gt; 1:   1     0      F  50 1959 days</span>
+<span class="co">#&gt; 2:  10     0      F  71 1673 days</span>
+<span class="co">#&gt; 3: 100     0      M  75 1070 days</span>
+<span class="co">#&gt; 4: 101     0      M  60 6370 days</span>
+<span class="co">#&gt; 5: 102     0      M  45 2367 days</span>
+<span class="co">#&gt; 6: 103     0      M  24  672 days</span></code></pre></div>
+<p>另外，需設定的參數有：<br><code>predictorColName</code>：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>method</code> : 設有兩種方式將各時間區間的結果進行統計計算最後的預測結果，第一為加權的方式，method=“weighting”，第一為投票的方式，method=“vote”。<br>
+此外，根據放入的feature，函式自動會使用對應區間的特徵。</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">coxmodel</span> <span class="op">&lt;-</span> <span class="fu">analWindow_COX</span><span class="op">(</span>DataFile_cutdata <span class="op">=</span> <span class="va">windowcut</span>,
-                         window_N <span class="op">=</span> <span class="va">window_N</span>,
-                         ID <span class="op">=</span> <span class="va">ID</span>,
+<code class="sourceCode R"><span class="va">coxmodel2</span> <span class="op">&lt;-</span> <span class="fu">analWindow_Cox</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span>,
                          DataFile_feature <span class="op">=</span> <span class="va">feature</span>,
                          DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
-                         label <span class="op">=</span> <span class="va">label</span>,
-                         dataLength <span class="op">=</span> <span class="va">dataLength</span>,
-                         predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"SEX"</span>,<span class="st">"age"</span><span class="op">)</span>,
-                         <span class="co">#periodage = periodage,</span>
-                         isDescription <span class="op">=</span> <span class="cn">T</span>,
-                         method <span class="op">=</span> <span class="st">"one window"</span>,
-                         N <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 5,8,52,115 ; coefficient may be infinite.</span>
-<span class="co">#&gt; Warning in melt.data.table(setDT(CCSWide_num), na.rm = TRUE): id.vars and</span>
-<span class="co">#&gt; measure.vars are internally guessed when both are 'NULL'. All non-numeric/</span>
-<span class="co">#&gt; integer/logical type columns are considered id.vars, which in this case are</span>
-<span class="co">#&gt; columns []. Consider providing at least one of 'id' or 'measure' vars in future.</span>
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 52,53,78,91,102 ; coefficient may be infinite.</span>
-<span class="co">#&gt; Warning in melt.data.table(setDT(CCSWide_num), na.rm = TRUE): id.vars and</span>
-<span class="co">#&gt; measure.vars are internally guessed when both are 'NULL'. All non-numeric/</span>
-<span class="co">#&gt; integer/logical type columns are considered id.vars, which in this case are</span>
-<span class="co">#&gt; columns []. Consider providing at least one of 'id' or 'measure' vars in future.</span>
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 5,8,51,52,54,100 ; coefficient may be infinite.</span>
-<span class="co">#&gt; Warning in melt.data.table(setDT(CCSWide_num), na.rm = TRUE): id.vars and</span>
-<span class="co">#&gt; measure.vars are internally guessed when both are 'NULL'. All non-numeric/</span>
-<span class="co">#&gt; integer/logical type columns are considered id.vars, which in this case are</span>
-<span class="co">#&gt; columns []. Consider providing at least one of 'id' or 'measure' vars in future.</span>
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 5,8,45,51,53,79,100 ; coefficient may be</span>
-<span class="co">#&gt; infinite.</span>
-<span class="co">#&gt; Warning in melt.data.table(setDT(CCSWide_num), na.rm = TRUE): id.vars and</span>
-<span class="co">#&gt; measure.vars are internally guessed when both are 'NULL'. All non-numeric/</span>
-<span class="co">#&gt; integer/logical type columns are considered id.vars, which in this case are</span>
-<span class="co">#&gt; columns []. Consider providing at least one of 'id' or 'measure' vars in future.</span>
-<span class="co">#&gt; Warning in coxph.fit(X, Y, istrat, offset, init, control, weights = weights, :</span>
-<span class="co">#&gt; Loglik converged before variable 8,14,52,53,77,78,87,100 ; coefficient may be</span>
-<span class="co">#&gt; infinite.</span>
-<span class="co">#&gt; Warning in melt.data.table(setDT(CCSWide_num), na.rm = TRUE): id.vars and</span>
-<span class="co">#&gt; measure.vars are internally guessed when both are 'NULL'. All non-numeric/</span>
-<span class="co">#&gt; integer/logical type columns are considered id.vars, which in this case are</span>
-<span class="co">#&gt; columns []. Consider providing at least one of 'id' or 'measure' vars in future.</span>
+                         idColName <span class="op">=</span> <span class="va">ID</span>,
+                         labelColName <span class="op">=</span> <span class="va">label</span>,
+                         dataLengthColName <span class="op">=</span> <span class="va">len</span>,
+                         <span class="co">#predictorColName = c("gender"),</span>
+                         isDescription <span class="op">=</span> <span class="cn">F</span>,
+                         testN <span class="op">=</span> <span class="fl">3</span>,
+                         method<span class="op">=</span><span class="st">"weighting"</span><span class="op">)</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &gt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &gt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
-<span class="co">#&gt;    CCS_CATEGORY                exp(coef)        exp(-coef)         lower .95</span>
-<span class="co">#&gt; 1:         SEXM         1.15046749799026  0.86921186539115 0.995828950847079</span>
-<span class="co">#&gt; 2:        `102`         1.03050237288954 0.970400482626726 0.685208838233465</span>
-<span class="co">#&gt; 3:        `106`        0.760858322380156  1.31430513485316 0.534100313939143</span>
-<span class="co">#&gt; 4:         `10`        0.643498679797837   1.5540047421918 0.416040594470181</span>
-<span class="co">#&gt; 5:        `117`         1.13371806408031 0.882053511964828 0.568229105170683</span>
-<span class="co">#&gt; 6:        `119` 0.0000000927053523798836  10786863.6958765                 0</span>
-<span class="co">#&gt;            upper .95           Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt; 1:  1.32911928580314 0.0570130316050992        NA</span>
-<span class="co">#&gt; 2:  1.54979778613007  0.885255358444771       149</span>
-<span class="co">#&gt; 3:  1.08388887185921  0.130079798821665       276</span>
-<span class="co">#&gt; 4: 0.995312852652984  0.047582621947719       270</span>
-<span class="co">#&gt; 5:  2.26196904932548  0.721754387240472        78</span>
-<span class="co">#&gt; 6:               Inf  0.990670156345325        19</span>
-<span class="co">#&gt;                              CCS_CATEGORY_DESCRIPTION</span>
-<span class="co">#&gt; 1:                                               &lt;NA&gt;</span>
-<span class="co">#&gt; 2:                             Nonspecific chest pain</span>
-<span class="co">#&gt; 3:                               Cardiac dysrhythmias</span>
-<span class="co">#&gt; 4: Immunizations and screening for infectious disease</span>
-<span class="co">#&gt; 5:                          Other circulatory disease</span>
-<span class="co">#&gt; 6:                  Varicose veins of lower extremity</span>
-<span class="co">#&gt;                                       CCS_LVL_2_LABEL</span>
-<span class="co">#&gt; 1:                                               &lt;NA&gt;</span>
-<span class="co">#&gt; 2:                              Diseases of the heart</span>
-<span class="co">#&gt; 3:                              Diseases of the heart</span>
-<span class="co">#&gt; 4: Immunizations and screening for infectious disease</span>
-<span class="co">#&gt; 5:  Diseases of arteries; arterioles; and capillaries</span>
-<span class="co">#&gt; 6:                   Diseases of veins and lymphatics</span>
-<span class="co">#&gt;                       CCS_LVL_1_LABEL</span>
-<span class="co">#&gt; 1:                               &lt;NA&gt;</span>
-<span class="co">#&gt; 2: Diseases of the circulatory system</span>
-<span class="co">#&gt; 3: Diseases of the circulatory system</span>
-<span class="co">#&gt; 4:  Infectious and parasitic diseases</span>
-<span class="co">#&gt; 5: Diseases of the circulatory system</span>
-<span class="co">#&gt; 6: Diseases of the circulatory system</span></code></pre></div>
+<span class="co">#&gt; Error in head(coxmodel$model_table[[1]]): object 'coxmodel' not found</span>
+<span class="va">coxmodel</span><span class="op">$</span><span class="va">evaluation_test</span>
+<span class="co">#&gt; Error in eval(expr, envir, enclos): object 'coxmodel' not found</span></code></pre></div>
+<p>以上述結果說明：<br>
+model_table為各時間區間進行Cox迴歸後的結果。<br>
+evaluation_test為統計各時間區間的最終預測結果。</p>
 </div>
 <div id="六以lstm建立預測模型" class="section level3">
 <h3 class="hasAnchor">
@@ -605,13 +676,12 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <p>LSTM為RNN中最常使用的模型，運用於做時間序列分析有良好的效果，在運算過程中能自動擷取具影響力的危險因子進行建模。使用analyWindow_LSTM()，使用者可以不需了解tensorflow中複雜的參數，直接根據analyWindow_LSTM()所需的參數進行設定，便可迅速得到以LSTM建立的疾病診斷時序預測模型。 此方法可用於多個時間窗建立預測模型，也可用於單個時間窗建立預測模型。<br>
 需提供二種資料表來進行建模。分別是<br>
 1. <strong>DataFile_cutdata</strong>：劃分為時間窗的資料，使用cutWindow()可以建構；<br>
-2. <strong>DataFile_personal</strong>：個案資料，包含ID、label、SEX、age，若有需放入一併建模的特徵，也須於此表格提供；<br>
-另外，需設定的參數有：<br><code>predictor</code>：除了CCS之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>N</code>: 時間窗數量 <code>batch_size</code>：batch size將決定一次訓練的樣本數目。預設為100。 <code>Epoch</code>：當一個完整的資料集通過了神經網路一次並且返回了一次，這個過程稱為一次epoch。預設為10，但會經過Validation的驗證後找到最佳的迭代次數， <code>units</code>：設定隱藏層的神經元數量。預設為16，常見的還有32、64等。</p>
+2. <strong>DataFile_personal</strong>：個案資料，包含ID、label、gender、age，若有需放入一併建模的特徵，也須於此表格提供；<br>
+另外，需設定的參數有：<br><code>predictorColName</code>：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>layer</code>: 架構LSTM的重要參數，決定lstm層數，1或2。<br><code>layer1_units</code>:第一層LSTM的神經單元數量，預設為16，常見的還有32、64等。<br><code>layer1_dropout</code>:為避免過擬合，可在每一層訓練完之後，隨機丟棄一些特徵，可以從0至1，常見為0、0.1或0.2。<br><code>layer2_units</code>:若layer設定為2，才需要為第二層設置參數，為神經單元數量，預設為16，常見的還有32、64等。<br><code>layer2_dropout</code>:若layer設定為2，才需要為第二層設置參數。為避免過擬合，可在每一層訓練完之後，隨機丟棄一些特徵，可以從0至1，常見為0、0.1或0.2。<br><code>batch_size</code>：batch size將決定一次訓練的樣本數目，預設為100。<br><code>Epoch</code>：當一個完整的資料集通過了神經網路一次並且返回了一次，這個過程稱為一次epoch，預設為10，表示會從10次epoch中找出經過Validation驗證後找到最佳的迭代次數。</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://keras.rstudio.com">keras</a></span><span class="op">)</span>
-<span class="co">#use_session_with_seed(10) #use_session_with_seed will be deprecated in the future. use set_random_seed instead.</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/tensorflow">tensorflow</a></span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/pkg/tensorflow/man/set_random_seed.html">set_random_seed</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>
+<span class="co">#set_random_seed(10)</span>
 <span class="fu"><a href="https://rdrr.io/pkg/tensorflow/man/install_tensorflow.html">install_tensorflow</a></span><span class="op">(</span><span class="op">)</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; Installation complete.</span>
@@ -620,220 +690,106 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <span class="co">#&gt; [1] '2.4.0'</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html">packageVersion</a></span><span class="op">(</span><span class="st">"tensorflow"</span><span class="op">)</span>
 <span class="co">#&gt; [1] '2.4.0'</span>
-<span class="co"># lstm &lt;- analWindow_LSTM(DataFile_cutdata=windowcut,</span>
-<span class="co">#                          window_N,</span>
-<span class="co">#                          ID,</span>
-<span class="co">#                          periodage=NULL,</span>
-<span class="co">#                          DataFile_personal=personal,</span>
-<span class="co">#                          label,</span>
-<span class="co">#                          predictor=c("SEX"),</span>
-<span class="co">#                          N=5)</span>
-<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM</span><span class="op">(</span>DataFile_cutdata<span class="op">=</span><span class="va">windowcut</span>,
-                         <span class="va">window_N</span>,
-                         <span class="va">ID</span>,
-                         periodAge<span class="op">=</span><span class="cn">NULL</span>,
-                         DataFile_personal<span class="op">=</span><span class="va">pat_dm</span>,
-                         <span class="va">label</span>,
-                         predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"SEX"</span><span class="op">)</span>,
-                         N <span class="op">=</span> <span class="fl">5</span>,
-                         <span class="co">#Epoch= 15,</span>
-                         <span class="co">#batch_size = 32,</span>
-                         <span class="co">#units = 16</span>
-                        <span class="op">)</span>
-<span class="co">#&gt; optimal epoch is  10</span>
-<span class="co">## evaluate</span>
-<span class="va">lstm</span><span class="op">$</span><span class="va">evaluation</span>
-<span class="co">#&gt;      loss     auc_5 </span>
-<span class="co">#&gt; 0.4058425 0.7589076</span>
 
+<span class="va">personal</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">.SD</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="st">"F"</span>,<span class="fl">0L</span>,<span class="fl">1L</span><span class="op">)</span><span class="op">)</span>,.SDcols<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">]</span>
+<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM</span><span class="op">(</span>DataFile_cutData<span class="op">=</span><span class="va">windowcut</span><span class="op">[</span>,<span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"periodAge"</span><span class="op">)</span><span class="op">]</span>,
+                         DataFile_personal<span class="op">=</span><span class="va">personal</span>,
+                         labelColName <span class="op">=</span> <span class="va">label</span>,
+                         <span class="co">#predictorColName=c("gender"),</span>
+                         N<span class="op">=</span><span class="fl">3</span>,
+                        batch_size<span class="op">=</span><span class="fl">16</span>,
+                        Epoch<span class="op">=</span><span class="fl">10</span>,
+                        layer<span class="op">=</span><span class="fl">1</span>,
+                        <span class="co">#layer1_dropout = 0.2,</span>
+                        <span class="co"># layer1_units = 16,</span>
+                        <span class="co"># layer2_dropout = 0,</span>
+                        <span class="co"># layer2_units = 16,</span>
+                        <span class="co"># units=16,</span>
+                        testN<span class="op">=</span><span class="fl">1</span><span class="op">)</span>
+<span class="co">#&gt; optimal epoch is  3</span>
+
+<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM2</span><span class="op">(</span>DataFile_cutData<span class="op">=</span><span class="va">windowcut</span><span class="op">[</span>,<span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"periodAge"</span><span class="op">)</span><span class="op">]</span>,
+                         DataFile_personal<span class="op">=</span><span class="va">personal</span>,
+                         labelColName <span class="op">=</span> <span class="va">label</span>,
+                         <span class="co">#predictorColName=c("gender"),</span>
+                         N<span class="op">=</span><span class="fl">3</span>,
+                        batch_size<span class="op">=</span><span class="fl">10</span>,
+                        Epoch<span class="op">=</span><span class="fl">10</span>,
+                        layer<span class="op">=</span><span class="fl">1</span>,
+                        layer1_dropout <span class="op">=</span> <span class="fl">0.2</span>,
+                        layer1_units <span class="op">=</span> <span class="fl">16</span>,
+                        <span class="co"># layer2_dropout = 0,</span>
+                        <span class="co"># layer2_units = 16,</span>
+                        <span class="co"># units=16,</span>
+                        testN<span class="op">=</span><span class="fl">4</span><span class="op">)</span>
+<span class="co">#&gt; optimal epoch is  7</span>
+
+<span class="co">## evaluate</span>
 <span class="va">model</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">model</span>
 <span class="va">x_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">x_test</span>
 <span class="va">y_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">y_test</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">model</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">x_test</span>, <span class="va">y_test</span>, batch_size <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span>
+<span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_train</span>
+<span class="co">#&gt; [1] 0.7542308 0.6751923 0.6411538 0.6507692 0.6803365</span>
+<span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_test</span>
+<span class="co">#&gt; [1] 0.8308823 0.7892157 0.6642157 0.6960784 0.7450980</span>
+
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">model</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">x_test</span>, <span class="va">y_test</span>, batch_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt;            [,1]</span>
-<span class="co">#&gt; [1,] 0.08371431</span>
-<span class="co">#&gt; [2,] 0.01462716</span>
-<span class="co">#&gt; [3,] 0.11890960</span>
-<span class="co">#&gt; [4,] 0.26366043</span>
-<span class="co">#&gt; [5,] 0.03103596</span>
-<span class="co">#&gt; [6,] 0.13509744</span></code></pre></div>
+<span class="co">#&gt; [1,] 0.05589366</span>
+<span class="co">#&gt; [2,] 0.15645063</span>
+<span class="co">#&gt; [3,] 0.11507106</span>
+<span class="co">#&gt; [4,] 0.18635646</span>
+<span class="co">#&gt; [5,] 0.08705586</span>
+<span class="co">#&gt; [6,] 0.15235451</span></code></pre></div>
 </div>
 <div id="七視覺化" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E4%B8%83%E8%A6%96%E8%A6%BA%E5%8C%96" class="anchor"></a>七、視覺化</h3>
-<p>視覺化功能分成三個部分，皆可由前述功能產出的資料直接匯入，輸出視覺化的圖片。<br>
-#### 時間窗視覺化<br>
-將各時間窗內的各疾病數量以grouped codes的方式視覺化。 DataFile_cutdata可由cutWindow()的輸出獲得。<br>
-method可分為top和ccslevel，top的預設為前10數量的的分類。</p>
+<p>視覺化功能分成三個部分，皆可由前述功能產出的資料直接匯入，輸出視覺化的圖片。</p>
+<div id="時間窗視覺化" class="section level4">
+<h4 class="hasAnchor">
+<a href="#%E6%99%82%E9%96%93%E7%AA%97%E8%A6%96%E8%A6%BA%E5%8C%96" class="anchor"></a>時間窗視覺化</h4>
+<p>將各時間窗內的各疾病數量以grouped codes的方式視覺化。<br>
+DataFile_cutdata可由cutWindow()的輸出獲得。<br>
+需設定的參數有:<br><code>method</code>:可分為“top”和“ccslevel”，top為計算數量並輸出前N名的排行，若method設定為top，則topN也需設定參數；ccslevel是以ccs_level_1為分組進行輸出，若method設定為ccslevel，則需在LVL_1_LABEL輸入cce_level的分類名稱。</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">)</span>
-<span class="co">#&gt;    window_N periodAge   ID 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20</span>
-<span class="co">#&gt; 1:        1         1    1 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 2:        1         1   10 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 3:        1         1  100 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 4:        1         1 1000 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 5:        1         1 1001 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 6:        1         1 1002 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt;    21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45</span>
-<span class="co">#&gt; 1:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 2:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 3:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 4:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 5:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 6:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt;    46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 76 77 78 79 80 81</span>
-<span class="co">#&gt; 1:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 2:  0  0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 3:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 4:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 5:  0  0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt; 6:  0  0  0  0  1  0  0  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</span>
-<span class="co">#&gt;    82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104</span>
-<span class="co">#&gt; 1:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:  0  0  0  0  0  0  0  0  0  0  0  1  0  1  0  0  0  0   0   0   0   0   0</span>
-<span class="co">#&gt; 6:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0   0   0   0   0   0</span>
-<span class="co">#&gt;    105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   1   0   1   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt;    124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0</span>
-<span class="co">#&gt;    143 144 145 146 147 148 149 151 152 153 154 155 156 157 158 159 160 161 162</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt;    163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt;    182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 199 200</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt;    201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   1   0   1   0   0   0   0   1   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt;    220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt;    239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255 256 257</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0</span>
-<span class="co">#&gt;    258 259 650 651 652 653 654 655 656 657 658 659 660 661 662 663 670 2601</span>
-<span class="co">#&gt; 1:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0    0</span>
-<span class="co">#&gt; 2:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0    0</span>
-<span class="co">#&gt; 3:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0    0</span>
-<span class="co">#&gt; 4:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0    0</span>
-<span class="co">#&gt; 5:   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0    0</span>
-<span class="co">#&gt; 6:   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0    0</span>
-<span class="co">#&gt;    2602 2603 2604 2605 2606 2607 2608 2609 2610 2611 2612 2613 2614 2615 2616</span>
-<span class="co">#&gt; 1:    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0</span>
-<span class="co">#&gt; 2:    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0</span>
-<span class="co">#&gt; 3:    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0</span>
-<span class="co">#&gt; 4:    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0</span>
-<span class="co">#&gt; 5:    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0</span>
-<span class="co">#&gt; 6:    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0</span>
-<span class="co">#&gt;    2617 2618 2619 2620 2621</span>
-<span class="co">#&gt; 1:    0    0    0    0    0</span>
-<span class="co">#&gt; 2:    0    0    0    0    0</span>
-<span class="co">#&gt; 3:    0    0    0    0    0</span>
-<span class="co">#&gt; 4:    0    0    0    0    0</span>
-<span class="co">#&gt; 5:    0    0    0    0    0</span>
-<span class="co">#&gt; 6:    0    0    0    0    0</span>
-<span class="fu">plotWindow</span><span class="op">(</span>DataFile_cutdata <span class="op">=</span> <span class="va">windowcut</span>,method<span class="op">=</span><span class="st">"top"</span>,LVL_1_LABEL<span class="op">=</span><span class="st">"Neoplasms"</span>,topN<span class="op">=</span><span class="fl">10</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu">plotWindow</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span>,
+           method<span class="op">=</span><span class="st">"top"</span>,
+           <span class="co">#LVL_1_LABEL="Neoplasms",</span>
+           topN<span class="op">=</span><span class="fl">10</span><span class="op">)</span></code></pre></div>
 <p><img src="dxtime_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
+</div>
 <div id="hazard-ratio視覺化" class="section level4">
 <h4 class="hasAnchor">
 <a href="#hazard-ratio%E8%A6%96%E8%A6%BA%E5%8C%96" class="anchor"></a>Hazard ratio視覺化</h4>
 <p>將生存分析後的hazard ratio進行視覺化。<br>
-DataFile為從analWindow_COX的輸出可獲得，pvalue為使用者設定。</p>
+DataFile為從analWindow_Cox的輸出可獲得，pvalue為使用者設定。</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
-<span class="co">#&gt;    CCS_CATEGORY                exp(coef)        exp(-coef)         lower .95</span>
-<span class="co">#&gt; 1:         SEXM         1.15046749799026  0.86921186539115 0.995828950847079</span>
-<span class="co">#&gt; 2:        `102`         1.03050237288954 0.970400482626726 0.685208838233465</span>
-<span class="co">#&gt; 3:        `106`        0.760858322380156  1.31430513485316 0.534100313939143</span>
-<span class="co">#&gt; 4:         `10`        0.643498679797837   1.5540047421918 0.416040594470181</span>
-<span class="co">#&gt; 5:        `117`         1.13371806408031 0.882053511964828 0.568229105170683</span>
-<span class="co">#&gt; 6:        `119` 0.0000000927053523798836  10786863.6958765                 0</span>
-<span class="co">#&gt;            upper .95           Pr(&gt;|z|) caseCount</span>
-<span class="co">#&gt; 1:  1.32911928580314 0.0570130316050992        NA</span>
-<span class="co">#&gt; 2:  1.54979778613007  0.885255358444771       149</span>
-<span class="co">#&gt; 3:  1.08388887185921  0.130079798821665       276</span>
-<span class="co">#&gt; 4: 0.995312852652984  0.047582621947719       270</span>
-<span class="co">#&gt; 5:  2.26196904932548  0.721754387240472        78</span>
-<span class="co">#&gt; 6:               Inf  0.990670156345325        19</span>
-<span class="co">#&gt;                              CCS_CATEGORY_DESCRIPTION</span>
-<span class="co">#&gt; 1:                                               &lt;NA&gt;</span>
-<span class="co">#&gt; 2:                             Nonspecific chest pain</span>
-<span class="co">#&gt; 3:                               Cardiac dysrhythmias</span>
-<span class="co">#&gt; 4: Immunizations and screening for infectious disease</span>
-<span class="co">#&gt; 5:                          Other circulatory disease</span>
-<span class="co">#&gt; 6:                  Varicose veins of lower extremity</span>
-<span class="co">#&gt;                                       CCS_LVL_2_LABEL</span>
-<span class="co">#&gt; 1:                                               &lt;NA&gt;</span>
-<span class="co">#&gt; 2:                              Diseases of the heart</span>
-<span class="co">#&gt; 3:                              Diseases of the heart</span>
-<span class="co">#&gt; 4: Immunizations and screening for infectious disease</span>
-<span class="co">#&gt; 5:  Diseases of arteries; arterioles; and capillaries</span>
-<span class="co">#&gt; 6:                   Diseases of veins and lymphatics</span>
-<span class="co">#&gt;                       CCS_LVL_1_LABEL</span>
-<span class="co">#&gt; 1:                               &lt;NA&gt;</span>
-<span class="co">#&gt; 2: Diseases of the circulatory system</span>
-<span class="co">#&gt; 3: Diseases of the circulatory system</span>
-<span class="co">#&gt; 4:  Infectious and parasitic diseases</span>
-<span class="co">#&gt; 5: Diseases of the circulatory system</span>
-<span class="co">#&gt; 6: Diseases of the circulatory system</span>
-<span class="fu">plotHR</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,
-       pvalue <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></code></pre></div>
-<p><img src="dxtime_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
+<span class="co">#&gt; Error in head(coxmodel$model_table[[3]]): object 'coxmodel' not found</span>
+<span class="fu">plotHR</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span>,
+       pvalue <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>
+<span class="co">#&gt; Error in gsub(pattern = "`", replacement = "", x = DataFile$CCS_CATEGORY): object 'coxmodel' not found</span></code></pre></div>
 </div>
 <div id="生存區線視覺化" class="section level4">
 <h4 class="hasAnchor">
 <a href="#%E7%94%9F%E5%AD%98%E5%8D%80%E7%B7%9A%E8%A6%96%E8%A6%BA%E5%8C%96" class="anchor"></a>生存區線視覺化</h4>
-<p>單個類別變數的存活差異，將視覺化將病例組與對照組的生存曲線轉換成grouped code，進行視覺化。<br>
+<p>可輸出單個類別變數的存活差異，將病例組與對照組的生存曲線進行視覺化。<br>
 var中填入使用者要看的ccs category。</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">plotSurv</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">record_dm</span>,
-         ID <span class="op">=</span> <span class="va">ID</span>,
-         ICD <span class="op">=</span> <span class="va">ICD</span>,
-         date <span class="op">=</span> <span class="va">date</span>,
+         idColName <span class="op">=</span> <span class="va">ID</span>,
+         icdColName <span class="op">=</span> <span class="va">ICD</span>,
+         dateColName <span class="op">=</span> <span class="va">date</span>,
          DataFile_personal <span class="op">=</span> <span class="va">pat_dm</span>,
-         label <span class="op">=</span> <span class="va">label</span>,
-         var <span class="op">=</span> <span class="st">"Essential hypertension"</span><span class="op">)</span>
-<span class="co">#&gt; Error in cutWindow(DataFile, ID, ICD, date, predictwindow = 0, icdcount = icdcount): unused arguments (predictwindow = 0, icdcount = icdcount)</span></code></pre></div>
+         labelColName <span class="op">=</span> <span class="va">label</span>,
+         varColName <span class="op">=</span> <span class="st">"Essential hypertension"</span><span class="op">)</span>
+<span class="co">#&gt; Wrong ICD format: total 226 ICD codes (the number of occurrences is in brackets)</span>
+<span class="co">#&gt; c("585 (1015)", "5640 (624)", "2500 (287)", "6009 (229)", "M791 (195)", "5714 (161)", "E780 (139)", "5210 (125)", "7805 (120)", "V670 (117)")</span>
+<span class="co">#&gt;  </span>
+<span class="co">#&gt; Scale for 'colour' is already present. Adding another scale for 'colour',</span>
+<span class="co">#&gt; which will replace the existing scale.</span></code></pre></div>
+<p><img src="dxtime_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
 </div>
 </div>
 </div>
