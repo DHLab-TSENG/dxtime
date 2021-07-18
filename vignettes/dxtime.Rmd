@@ -1,3 +1,8 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
 ```{r, echo=FALSE} 
 knitr::opts_chunk$set(error = TRUE) 
 ```
@@ -29,37 +34,44 @@ library(dxtime)
 ```
 ## 範例資料
 以下功能介紹皆以`pat_dm`以及`record_dm`做為範例。  
-pat_dm中共6000名個案，1000位病例組(label=1)，5000位為對照組(label=0);   
-record_dm為該6000名個案在指標日(發生疾病/最後一筆...)的之診斷紀錄。  
+pat_dm中共200名個案，170位病例組(label=1)，30位為對照組(label=0);   
+record_dm為該200名個案在指標日(發生疾病/最後一筆...)的之診斷紀錄。  
 ```{r}
 head(pat_dm)
 head(record_dm)
 ```
-## 功能說明
+
+## 使用流程
+<img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/overview.png" style="display:block; margin:auto; width:100%;">  
+
+名詞的時間軸狀態
+<img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/timeline.png" style="display:block; margin:auto; width:100%;">   
+
+  
 ### 一、篩選符合研究長度之個案及診斷紀錄  
  
-在對照病例研究，會探討回溯期間內的暴露因子與疾病發生的關係。隨著回溯時間長度越長，所囊括的暴露的危險因子會越多，樣本比較之下，將會造成「回溯時長較長的樣本，危險因子較多」的偏誤。  
-為避免這種偏誤，固定追蹤時長是較佳的作法。但每個樣本的發病日期(indexday)並不相同，在filterCasesRecords()可回推追蹤時間，找出追蹤時間範圍內的診斷資料；此外，資料長度不足的樣本也可將之排除。  
+在病例對照研究，會探討回溯期間內的暴露因子與疾病發生的關係。隨著回溯時間長度越長，所囊括的暴露的危險因子會越多，樣本比較之下，將會造成「回溯時長較長的樣本，危險因子較多」的偏誤。  
+為避免這種偏誤，固定追蹤時長是較佳的作法。但每個樣本的發病日期(indexDate)並不相同，在filterCasesRecords()可回推追蹤時間，找出追蹤時間範圍內的診斷資料；此外，資料長度不足的樣本也可將之排除。  
 
-需設定的參數有:  
-`predictwindow`: 預測天數，意指「想要於指標日多久前進行預測」。    
-`followindow`：此研究所設定的追蹤時長，將用於篩選時間範圍內的診斷紀錄。  
-`dataLength_limit`：將資料長度不足的個案於以排除，預設為0。  
-`count_limit`：若是診斷紀錄的筆數過少，有可能意味著該個案極少至此醫療單位看診，研究者可設定診斷紀錄的數量下限，來決定是否採納此個案之紀錄，預設為0。  
+主要需設定的參數有:  
+`predictGap`: 預測天數，意指「想要於指標日多久前進行預測」。    
+`exposurePeriod`：此研究所設定的危險因子暴露時長，將用於篩選時間範圍內的診斷紀錄。  
+`includePeriodAtLeast`：病患須擁有的資料長度下限。結果將依設定將資料長度不足的個案於以排除，預設為0。  
+`countICDAtLeast`：病患須擁有的資料筆數下限，若是診斷紀錄的筆數過少，有可能意味著該個案極少至此醫療單位看診，研究者可設定診斷紀錄的數量下限，來決定是否採納此個案之紀錄，預設為0。  
 `align`：設定納入資料的方式，是由起始點往後(align="left")，或是預測點往回推(align="right")，預設為right。  
 
-執行結束會產生兩種結果，分別是DataFile_pat及DataFile_rec。
+執行結束會產生兩種結果，分別是Patient(病患資料)及Record(診斷資料)。
 
 ```{r}
 #dxData <- merge(record_dm,pat_dm[,c("ID","label")],by="ID",all.x=T)
 length <- filterCasesRecords(DataFile = record_dm,
-                             ID = ID,
-                             ICD = ICD,
-                             date = date,
-                             predictWindow = 180, 
-                             folloWindow = 3600, 
-                             followedDataLength_limit = 360, 
-                             countICD_limit = 2,
+                             idColName = ID,
+                             icdColName = ICD,
+                             dateColName = date,
+                             predictGap = 180, 
+                             exposurePeriod = 1800, 
+                             includePeriodAtLeast = 360, 
+                             countICDAtLeast = 2,
                              align="right"
                              )
 head(length$Patient) 
@@ -68,27 +80,31 @@ head(length$Record)
 ```
 以上框結果說明：
 
-第一種結果`DataFile_pat`，該資料表顯示三個時間點，firstdate、predicdate、indexdate。
-firstdate為第一比診斷紀錄的日期；predictdate為預測資料的最後一個預測時間點，也就是indexdate-followindow；indexdate為最後一筆資料的時間點。
-dataLength計算該個案在predictdate之前的資料長度，而n計算該個案的診斷紀錄筆數，如符合研究設定的篩選條件(dataLength>dataLength_limit & n>count_limit)的個案，在cri顯示TRUE，反之則為FALSE。  
+第一種結果**Patient**，該資料表顯示三個時間點，firstDate、predicDate、indexDate。
+firstDate為第一筆診斷紀錄的日期；predictDate為預測資料的最後一個預測時間點，也就是indexDate-exposurePeriod；indexDate為最後一筆資料的時間點。
+includePeriod計算該個案在predictDate之前的資料長度，而count計算該個案的診斷紀錄筆數，如符合研究設定的篩選條件(includePeriod>includePeriodAtLeast & count>count_limit)的個案，在cri顯示TRUE，反之則為FALSE。  
 
-第二種資料`DataFile_rec`，從符合個案的資料中，篩選出符合研究長度(followindow)的診斷紀錄。  
+第二種資料**Record**，從符合個案的資料中，篩選出符合研究長度(exposurePeriod)的診斷紀錄。  
 
 
 ### 二、配對個案  
-避免干擾因子的影響，研究者可將重要的人口學特徵，例如:性別、年齡、種族等等進行配對，使對照組的人口學特徵的分布與病例組相似。在matchCases()使用傾向配對的方法，將配對變數置入羅吉斯回歸中，得到所有干擾因子的發病機率pscore。最後以pscore相同者配對，找出匹配病例組的對照組。  
-使用者須給定要匹配的變量以及label。將匹配變量以向量輸入至`matchedVariable`參數。結果會輸出被配對到個個案以及pscore。
+避免干擾因子的影響，研究者可將重要的人口學特徵，例如:性別、年齡、種族等等進行配對，使對照組的人口學特徵的分布與病例組相似。在matchCases()能使用兩種方法進行配對。  
+第一為method="derict"，直接將干擾變數的條件相同者進行配對  
+第二為method="pscore"，傾向配對法，將配對變數置入羅吉斯回歸中，得到所有干擾因子的發病機率pscore，最後以pscore相同者配對，找出匹配病例組的對照組。  
+使用者須給定要匹配的變量以及label。將匹配變量以向量輸入至`matchedVariable`參數。結果會輸出被配對到個個案以及傾向配對分數。
 
 ```{r}
 match <- matchCases(DataFile = pat_dm,
-                    ID = ID,
-                    label = label,
-                    matchedVariable = c("age","SEX")
+                    idColName = ID,
+                    labelColName = label,
+                    matchedVariableColName = c("age","gender"),
+                    method = "pscore",
+                    ratio = 5L
                     )
 # match <- matchCases(DataFile = pat_dm %>% filter(pat_dm$ID %in% length$DataFile_pat$ID),
-#                     ID = ID,
-#                     label = label,
-#                     matchedVariable = c("age","SEX"))
+#                     idColName = ID,
+#                     labelColName = label,
+#                     matchedVariable = c("age","gender"))
 head(match)
 nrow(match)
 ```
@@ -98,110 +114,104 @@ nrow(match)
 在劃分時間窗時，除了群組編碼的轉換，也能進行年齡計算，由於年齡會隨時間變化，同一個樣本在不同時間窗的年齡會隨之推移，因此cutWindow()可在切分時間窗時一併進行窗內年齡的計算，最後可選擇以二元碼(預設以45歲為分界)或以實際數值的型態呈現。
 
 
-需設定的參數有:  
-`getPeriodage`:預設為FALSE，如設定為TRUE，可利用BIRTHDAY計算出的每個時間窗的年齡periodage，以數字型態呈現，若需要以二元形式呈現，可用binaryage=T，預設會以45歲為分界，也可以使用agelayer自行設定。  
-`predictwindow`: 預測天數，意指「想要於指標日多久前進行預測」。    
-`window`：設定時間窗的長度。  
-`N`：設定時間窗數量，注意：若該個案在某時間窗中沒有診斷資料，將會自動補0。  
-`icdcount`：定義在追蹤期間，多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)。  
+主要需設定的參數有:  
+`birthdayColName`:此參數為計算年齡需使用到的參數，可利用birthday計算出的每個時間窗的年齡periodage並以數字型態呈現，若需要以二元形式呈現，可用`binaryage=T`，預設會以45歲為分界，也可以使用`agelayer`自行設定分界。若輸入資料沒包含生日，則不會進行區間年齡的計算。 
+`N`：設定時間窗數量，注意：若該個案在某時間窗中沒有診斷資料，將會自動補0。   
+`countICD_toCCS`：定義在追蹤期間，多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)。  
 
-```{r}
-# forcut <- merge(length$DataFile_rec %>% filter(ID %in% match$ID),pat_dm[,.(ID,BIRTHDAY)],all.x=T)
-forcut <- merge(record_dm,pat_dm[,.(ID,BIRTHDAY)],all.x=T)
+```{r,warning = F}
+#forcut <- merge(length$Record %>% filter(ID %in% match$ID),pat_dm[,.(ID,birthday)],all.x=T)
+forcut <- merge(record_dm,pat_dm[,.(ID,birthday)],all.x=T)
 head(forcut)
 windowcut <- cutWindow(DataFile = forcut , 
-                       ID = ID ,
-                       ICD = ICD , 
-                       date = date ,
-                       BIRTHDAY = BIRTHDAY ,
-                       getPeriodage = T,
+                       idColName = ID ,
+                       icdColName = ICD , 
+                       dateColName = date ,
+                       birthdayColName = birthday ,
                        binaryAge = T ,
-                       ageLayer = 30,
-                       predictWindow = 180 ,
+                       #ageLayer = 45,
+                       predictGap = 180 ,
                        window = 360 , 
                        N = 5 ,
-                       countICD_toccs = 2)
+                       countICD_toCCS = 2
+                       )
 head(windowcut[,1:10])
 ```
 以上述結果說明：  
-periodage代表該個案在該時間窗的年紀。1為大於等於45歲；0則反之。  
-window_N代表時間窗的次序，數字越小越接近指標日；此外window_N為0，是不分時間窗時的狀況。 
+periodAge代表該個案在該時間窗的年紀。1為大於等於45歲；0則反之。  
+window_N代表時間窗的次序，數字越小越接近指標日；此外window_N為"all"，是不分時間窗時的狀況。 
 其餘的數字欄位為CCS的編碼，1表示得到疾病，0則反之。  
 
 ### 四、選擇特徵  
-以grouped codes的方式，將ICD轉換成CCS，並且進行COX單變量回歸後，選出p-value<0.05 & 得病人數>casecount_limit的特徵；  
-可以用全長度資料做一次特徵篩選(單時間窗)，也可以做多時間窗的特徵篩選。  
+運用時間窗資料，將所有ccs為預測變數，進行Cox單變量回歸後，選出p-value<0.05 & 得病人數>caseCountRate_limit的特徵；  
+可以用全長度資料做一次特徵篩選(method = "allWindow")，也可以做多時間窗(method = "perWindow")的特徵篩選。  
 
-需設定的參數有：  
-`icdcount`：定義多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)，每個window會分開計算。  
-`casecount_limit`：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵。  
-`predictwindow`: 預測天數，意指「想要於指標日多久前進行預測」。   
-`window`：設定時間窗的長度。  
-`N`：設定時間窗數量，注意，若該個案在某時間窗中沒有診斷資料，將會自動補0。  
-`isDescription`：結果呈現的特徵表是否顯示CCS的中文描述。  
+主要需設定的參數有：  
+`caseCountRate_limit`：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵，此參數的單為為比例，因此不得大於1。  
+`isDescription`：輸出結果是否具備ccs的中文描述。  
+`method`: 選取特徵的方法，method = "perWindow"區分時間窗做特徵選取，method = "allWindow"為不區分時間窗的特徵選取。  
 
-```{r}
+```{r, warning=FALSE}
 head(length$DataFile_rec)
-#forselect <- length$DataFile_rec[length$DataFile_rec$ID %in% match$ID,]
-forselect <- merge(record_dm,pat_dm[,c("ID","label")],by="ID",all.x = T)
-feature <- selectFeature(DataFile = forselect,
-                         ID = ID,
-                         ICD = ICD,
-                         date = date,
-                         label = label,
-                         countICD_toccs = 2,
-                         predictWindow = 180,
-                         casecountRate_limit = 0.001,
-                         #window = 360,
-                         #N = 5,
-                         isDescription = F
-                         #type = "single"
+record_dm <- record_dm
+lengthdata <- unique(record_dm[,dataLength:=max(date)-min(date),by="ID"][,.(ID,dataLength)])
+#lengthdata <- unique(length$Record[,dataLength:=max(date)-min(date),by="ID"][,.(ID,dataLength)])
+personal <- merge(pat_dm[,.(ID,label,gender,age),],lengthdata,by="ID",all.x=T)
+
+feature <- selectFeature(DataFile_cutData = windowcut,
+                         DataFile_personal = personal,
+                         idColName = ID,
+                         labelColName=label,
+                         dataLengthColName = dataLength,
+                         caseCountRate_limit = 0.001,
+                         isDescription = T,
+                         pvalue=0.05,
+                         method = "allWindow"
                          )
 
 head(feature[[1]])
 ```
 以上述結果說明：
 feature涵蓋每個時間窗的篩選結果，有幾個時間窗就有幾個table。  
-以第一個table舉例，HR為`100`的風險比率；Pr(>|z|)為p-value；caseCount為該時間窗中共有多少個案患病，最後，若p-value<0.05 & caseCount>casecount_limit會在selected顯示為TRUE。  
+以上圖輸出舉例，HR為風險比率；Pr(>|z|)為p-value；caseCount為該時間窗中共有多少個案患病，最後，若p-value<0.05 & caseCount>caseCountRate_limit*總人數的ccs，會在selected顯示為TRUE。  
 
 ### 五、以COX回歸建立預測模型
-使用grouped codes的方式，用CCS為預測變量進行建模。
+使用grouped codes的方式，用ccs為預測變量進行建模。
 需提供三種資料表來進行建模。分別是  
 1. **DataFile_cutdata**：劃分為時間窗的資料，使用cutWindow function可以獲得；  
 2. **DataFile_feature**：要放入作為預測變量的特徵；  
-3. **DataFile_personal**：個案資料，包含ID、label、SEX、age，若有需放入一併建模的特徵，也須於此表中提供欄位；  
-另外，需設定的參數有：  
-`predictor`：除了CCS之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。  
-`method`：分為"per window"以及"one window"兩種方法，兩種方法的差別在於DataFile_feature的不同，若是多時間窗的特徵進行建模，此參數應設為"per window"，若是單時間窗的特徵進行建模則設為"one window"。  
+3. **DataFile_personal**：個案資料，包含ID、label、gender、age，若有需放入一併建模的特徵，也須於此表中提供欄位；  
 
 ```{r}
-record_dm <- record_dm
-lengthdata <- unique(record_dm[,dataLength :=max(date)-min(date),by="ID"][,.(ID,dataLength)])
-# lengthdata <- unique(length$DataFile_rec[,futime:=max(date)-min(date),by="ID"][,.(ID,futime)])
-
-personal <- merge(pat_dm[,.(ID,label,SEX,age),],lengthdata,by="ID",all.x=T)
 head(windowcut[,1:10])
 head(feature)
 head(personal)
-
 ```
 
-```{r}
-coxmodel <- analWindow_COX(DataFile_cutdata = windowcut,
-                         window_N = window_N,
-                         ID = ID,
+另外，需設定的參數有：  
+`predictorColName`：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。  
+`method` : 設有兩種方式將各時間區間的結果進行統計計算最後的預測結果，第一為加權的方式，method="weighting"，第一為投票的方式，method="vote"。  
+此外，根據放入的feature，函式自動會使用對應區間的特徵。
+
+
+```{r, warning=FALSE}
+coxmodel <- analWindow_Cox(DataFile_cutData = windowcut[window_N != "all"],
                          DataFile_feature = feature,
                          DataFile_personal = personal,
-                         label = label,
-                         dataLength = dataLength,
-                         predictor = c("SEX","age"),
-                         #periodage = periodage,
+                         idColName = ID,
+                         labelColName = label,
+                         dataLengthColName = dataLength,
+                         predictorColName = c("gender"),
                          isDescription = T,
-                         method = "one window",
-                         N = 5)
+                         testN = 3,
+                         method="weighting")
 head(coxmodel$model_table[[1]])
+coxmodel$evaluation_test
 
 ```
+以上述結果說明：  
+model_table為各時間區間進行Cox迴歸後的結果。  
+evaluation_test為統計各時間區間的最終預測結果。
 
 
 ### 六、以LSTM建立預測模型
@@ -209,61 +219,79 @@ LSTM為RNN中最常使用的模型，運用於做時間序列分析有良好的�
 此方法可用於多個時間窗建立預測模型，也可用於單個時間窗建立預測模型。  
 需提供二種資料表來進行建模。分別是  
 1. **DataFile_cutdata**：劃分為時間窗的資料，使用cutWindow()可以建構；  
-2. **DataFile_personal**：個案資料，包含ID、label、SEX、age，若有需放入一併建模的特徵，也須於此表格提供；  
+2. **DataFile_personal**：個案資料，包含ID、label、gender、age，若有需放入一併建模的特徵，也須於此表格提供；  
 另外，需設定的參數有：  
-`predictor`：除了CCS之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。  
-`N`: 時間窗數量
-`batch_size`：batch size將決定一次訓練的樣本數目。預設為100。
-`Epoch`：當一個完整的資料集通過了神經網路一次並且返回了一次，這個過程稱為一次epoch。預設為10，但會經過Validation的驗證後找到最佳的迭代次數，
-`units`：設定隱藏層的神經元數量。預設為16，常見的還有32、64等。
+`predictorColName`：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。  
+`layer`: 架構LSTM的重要參數，決定lstm層數，1或2。  
+`layer1_units`:第一層LSTM的神經單元數量，預設為16，常見的還有32、64等。  
+`layer1_dropout`:為避免過擬合，可在每一層訓練完之後，隨機丟棄一些特徵，可以從0至1，常見為0、0.1或0.2。  
+`layer2_units`:若layer設定為2，才需要為第二層設置參數，為神經單元數量，預設為16，常見的還有32、64等。  
+`layer2_dropout`:若layer設定為2，才需要為第二層設置參數。為避免過擬合，可在每一層訓練完之後，隨機丟棄一些特徵，可以從0至1，常見為0、0.1或0.2。  
+`batch_size`：batch size將決定一次訓練的樣本數目，預設為100。  
+`Epoch`：當一個完整的資料集通過了神經網路一次並且返回了一次，這個過程稱為一次epoch，預設為10，表示會從10次epoch中找出經過Validation驗證後找到最佳的迭代次數。  
 
 
 ```{r}
 library(keras)
-#use_session_with_seed(10) #use_session_with_seed will be deprecated in the future. use set_random_seed instead.
 library(tensorflow)
-set_random_seed(10)
+#set_random_seed(10)
 install_tensorflow()
 # check version
 packageVersion("keras")
 packageVersion("tensorflow")
-# lstm <- analWindow_LSTM(DataFile_cutdata=windowcut,
-#                          window_N,
-#                          ID,
-#                          periodage=NULL,
-#                          DataFile_personal=personal,
-#                          label,
-#                          predictor=c("SEX"),
-#                          N=5)
-lstm <- analWindow_LSTM(DataFile_cutdata=windowcut,
-                         window_N,
-                         ID,
-                         periodAge=NULL,
-                         DataFile_personal=pat_dm,
-                         label,
-                         predictor=c("SEX"),
-                         N = 5,
-                         #Epoch= 15,
-                         #batch_size = 32,
-                         #units = 16
-                        )
-## evaluate
-lstm$evaluation
 
+personal[,c("gender"):=lapply(.SD,function(x)ifelse(x=="F",0L,1L)),.SDcols=c("gender")]
+# lstm <- analWindow_LSTM(DataFile_cutData=windowcut[,-c("periodAge")],
+#                          DataFile_personal=personal,
+#                          labelColName = label,
+#                          predictorColName=c("gender"),
+#                          N=3,
+#                         batch_size=16,
+#                         Epoch=10,
+#                         layer=1,
+#                         #layer1_dropout = 0.2,
+#                         # layer1_units = 16,
+#                         # layer2_dropout = 0,
+#                         # layer2_units = 16,
+#                         # units=16,
+#                         testN=2)
+
+lstm <- analWindow_LSTM(DataFile_cutData = windowcut[window_N != "all"],
+                         DataFile_personal=personal,
+                         labelColName = label,
+                         predictorColName=c("gender"),
+                         N=3,
+                        batch_size=10,
+                        Epoch=10,
+                        layer=1,
+                        layer1_dropout = 0.2,
+                        layer1_units = 16,
+                        # layer2_dropout = 0,
+                        # layer2_units = 16,
+                        # units=16,
+                        testN = 4)
+
+## evaluate
 model <- lstm$model
 x_test <- lstm$x_test
 y_test <- lstm$y_test
-head(model %>% predict(x_test, y_test, batch_size = 100))
+lstm$evaluation_train
+lstm$evaluation_test
+
+head(model %>% predict(x_test, y_test, batch_size = 10))
+
 ```
 ### 七、視覺化
 視覺化功能分成三個部分，皆可由前述功能產出的資料直接匯入，輸出視覺化的圖片。  
+
 ####  時間窗視覺化    
-將各時間窗內的各疾病數量以grouped codes的方式視覺化。
+將各時間窗內的各疾病數量以grouped codes的方式視覺化。  
 DataFile_cutdata可由cutWindow()的輸出獲得。  
-method可分為top和ccslevel，top的預設為前10數量的的分類。
+需設定的參數有:  
+`method`:可分為"top"和"ccslevel"，top為計算數量並輸出前N名的排行，若method設定為top，則topN也需設定參數；ccslevel是以ccs_level_1為分組進行輸出，若method設定為ccslevel，則需在LVL_1_LABEL輸入cce_level的分類名稱。  
 
 ```{r}
-plotWindow(DataFile_cutdata = windowcut,
+plotWindow(DataFile_cutData = windowcut,
            method="top",
            #LVL_1_LABEL="Neoplasms",
            topN=10)
@@ -271,23 +299,22 @@ plotWindow(DataFile_cutdata = windowcut,
 
 ####  Hazard ratio視覺化  
 將生存分析後的hazard ratio進行視覺化。  
-DataFile為從analWindow_COX的輸出可獲得，pvalue為使用者設定。
+DataFile為從analWindow_Cox的輸出可獲得，pvalue為使用者設定。
 ```{r}
-head(coxmodel$model_table[[1]])
-plotHR(DataFile = coxmodel$model_table[[1]],
+head(coxmodel$model_table[[3]])
+plotHR(DataFile = coxmodel$model_table[[3]],
        pvalue = 0.05)
 ```
 
 #### 生存區線視覺化  
-單個類別變數的存活差異，將視覺化將病例組與對照組的生存曲線轉換成grouped code，進行視覺化。  
+可輸出單個類別變數的存活差異，將病例組與對照組的生存曲線進行視覺化。  
 var中填入使用者要看的ccs category。
 
-```{r}
-plotSurv(DataFile = record_dm,
-         ID = ID,
-         ICD = ICD,
-         date = date,
-         DataFile_personal = pat_dm,
-         label = label,
-         var = "Essential hypertension")
+```{r,warning=FALSE}
+plotSurv(DataFile_cutData = windowcut[window_N=="all"],
+         DataFile_personal = personal,
+         idColName = ID,
+         labelColName = label,
+         dataLengthColName = dataLength,
+         ccsDescription = "Essential hypertension")
 ```
