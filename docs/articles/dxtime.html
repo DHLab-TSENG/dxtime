@@ -219,24 +219,6 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
                        N <span class="op">=</span> <span class="fl">5</span> ,
                        countICD_toCCS <span class="op">=</span> <span class="fl">2</span>
                        <span class="op">)</span>
-<span class="co">#&gt; Wrong ICD format: total 222 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (944)", "5640 (620)", "2500 (269)", "6009 (223)", "M791 (150)", "5714 (144)", "5210 (124)", "7805 (120)", "V670 (115)", "V048 (114)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD format: total 50 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (116)", "M791 (89)", "E780 (41)", "E784 (33)", "2500 (23)", "5714 (22)", "E11359 (18)", "V451 (17)", "F328 (15)", "T1490 (15)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD format: total 64 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (132)", "M791 (61)", "E780 (54)", "E784 (48)", "H3532 (25)", "K0532 (24)", "2500 (22)", "E11359 (16)", "T1490 (16)", "5640 (15)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD format: total 55 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (175)", "5640 (73)", "0414 (22)", "6009 (22)", "V155 (19)", "2554 (17)", "V135 (17)", "V048 (13)", "E780 (13)", "5888 (12)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD format: total 61 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (185)", "5640 (111)", "0414 (38)", "V155 (37)", "V135 (35)", "5997 (22)", "6009 (21)", "5234 (16)", "5210 (14)", "V048 (14)")</span>
-<span class="co">#&gt;  </span>
-<span class="co">#&gt; Wrong ICD format: total 38 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (182)", "5640 (60)", "5210 (33)", "V048 (20)", "6009 (17)", "2740 (11)", "5997 (11)", "2500 (7)", "6000 (7)", "2429 (6)")</span>
-<span class="co">#&gt;  </span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    window_N periodAge  ID ccs_1 ccs_2 ccs_3 ccs_4 ccs_5 ccs_6 ccs_7</span>
 <span class="co">#&gt; 1:        1         1   1     0     0     0     0     0     0     0</span>
@@ -393,79 +375,6 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
                          isDescription <span class="op">=</span> <span class="cn">T</span>,
                          testN <span class="op">=</span> <span class="fl">3</span>,
                          method<span class="op">=</span><span class="st">"weighting"</span><span class="op">)</span>
-<span class="co">#&gt; same features in all windows</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
-<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
-<span class="co">#&gt; Setting direction: controls &lt; cases</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    features exp(coef) lower .95 upper .95 Pr(&gt;|z|) caseCount</span>
 <span class="co">#&gt; 1:  ccs_134     1.619      0.44     5.957    0.469        19</span>
