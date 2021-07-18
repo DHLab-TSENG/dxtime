@@ -67,7 +67,7 @@
       <h1 data-toc-skip>Getting started with dxtime</h1>
                         <h4 class="author">Yi-An, Chu</h4>
             
-            <h4 class="date">2021-07-17</h4>
+            <h4 class="date">2021-07-18</h4>
       
       
       <div class="hidden name"><code>dxtime.Rmd</code></div>
@@ -108,18 +108,22 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 <span class="co">#&gt; 5:  5 1944-08-01      M     0  74</span>
 <span class="co">#&gt; 6:  6 1982-11-27      M     0  32</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">record_dm</span><span class="op">)</span>
-<span class="co">#&gt;     ID       date  ICD</span>
-<span class="co">#&gt; 1: 149 2015-07-08 4019</span>
-<span class="co">#&gt; 2: 149 2015-07-08 2720</span>
-<span class="co">#&gt; 3: 149 2015-07-08 7840</span>
-<span class="co">#&gt; 4: 149 2015-09-30 4019</span>
-<span class="co">#&gt; 5: 149 2015-09-30 2720</span>
-<span class="co">#&gt; 6: 149 2015-09-30 7840</span></code></pre></div>
+<span class="co">#&gt;     ID       date  ICD dataLength</span>
+<span class="co">#&gt; 1: 149 2015-07-08 4019  6077 days</span>
+<span class="co">#&gt; 2: 149 2015-07-08 2720  6077 days</span>
+<span class="co">#&gt; 3: 149 2015-07-08 7840  6077 days</span>
+<span class="co">#&gt; 4: 149 2015-09-30 4019  6077 days</span>
+<span class="co">#&gt; 5: 149 2015-09-30 2720  6077 days</span>
+<span class="co">#&gt; 6: 149 2015-09-30 7840  6077 days</span></code></pre></div>
 </div>
 <div id="使用流程" class="section level2">
 <h2 class="hasAnchor">
 <a href="#%E4%BD%BF%E7%94%A8%E6%B5%81%E7%A8%8B" class="anchor"></a>使用流程</h2>
-<p><img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/overview.png"><br><img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/timeline.png"> ## 功能說明 ### 一、篩選符合研究長度之個案及診斷紀錄</p>
+<p><img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/overview.png" style="display:block; margin:auto; width:100%;"></p>
+<p>名詞的時間軸狀態 <img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/timeline.png" style="display:block; margin:auto; width:100%;"></p>
+<div id="一篩選符合研究長度之個案及診斷紀錄" class="section level3">
+<h3 class="hasAnchor">
+<a href="#%E4%B8%80%E7%AF%A9%E9%81%B8%E7%AC%A6%E5%90%88%E7%A0%94%E7%A9%B6%E9%95%B7%E5%BA%A6%E4%B9%8B%E5%80%8B%E6%A1%88%E5%8F%8A%E8%A8%BA%E6%96%B7%E7%B4%80%E9%8C%84" class="anchor"></a>一、篩選符合研究長度之個案及診斷紀錄</h3>
 <p>在病例對照研究，會探討回溯期間內的暴露因子與疾病發生的關係。隨著回溯時間長度越長，所囊括的暴露的危險因子會越多，樣本比較之下，將會造成「回溯時長較長的樣本，危險因子較多」的偏誤。<br>
 為避免這種偏誤，固定追蹤時長是較佳的作法。但每個樣本的發病日期(indexDate)並不相同，在filterCasesRecords()可回推追蹤時間，找出追蹤時間範圍內的診斷資料；此外，資料長度不足的樣本也可將之排除。</p>
 <p>主要需設定的參數有:<br><code>predictGap</code>: 預測天數，意指「想要於指標日多久前進行預測」。<br><code>exposurePeriod</code>：此研究所設定的危險因子暴露時長，將用於篩選時間範圍內的診斷紀錄。<br><code>includePeriodAtLeast</code>：病患須擁有的資料長度下限。結果將依設定將資料長度不足的個案於以排除，預設為0。<br><code>countICDAtLeast</code>：病患須擁有的資料筆數下限，若是診斷紀錄的筆數過少，有可能意味著該個案極少至此醫療單位看診，研究者可設定診斷紀錄的數量下限，來決定是否採納此個案之紀錄，預設為0。<br><code>align</code>：設定納入資料的方式，是由起始點往後(align=“left”)，或是預測點往回推(align=“right”)，預設為right。</p>
@@ -155,6 +159,7 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 <p>以上框結果說明：</p>
 <p>第一種結果<strong>Patient</strong>，該資料表顯示三個時間點，firstDate、predicDate、indexDate。 firstDate為第一筆診斷紀錄的日期；predictDate為預測資料的最後一個預測時間點，也就是indexDate-exposurePeriod；indexDate為最後一筆資料的時間點。 includePeriod計算該個案在predictDate之前的資料長度，而count計算該個案的診斷紀錄筆數，如符合研究設定的篩選條件(includePeriod&gt;includePeriodAtLeast &amp; count&gt;count_limit)的個案，在cri顯示TRUE，反之則為FALSE。</p>
 <p>第二種資料<strong>Record</strong>，從符合個案的資料中，篩選出符合研究長度(exposurePeriod)的診斷紀錄。</p>
+</div>
 <div id="二配對個案" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E4%BA%8C%E9%85%8D%E5%B0%8D%E5%80%8B%E6%A1%88" class="anchor"></a>二、配對個案</h3>
@@ -195,13 +200,13 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 <code class="sourceCode R"><span class="co">#forcut &lt;- merge(length$Record %&gt;% filter(ID %in% match$ID),pat_dm[,.(ID,birthday)],all.x=T)</span>
 <span class="va">forcut</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">record_dm</span>,<span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">birthday</span><span class="op">)</span><span class="op">]</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">forcut</span><span class="op">)</span>
-<span class="co">#&gt;    ID       date   ICD   birthday</span>
-<span class="co">#&gt; 1:  1 2002-09-14  5649 1956-03-18</span>
-<span class="co">#&gt; 2:  1 2002-09-14  2724 1956-03-18</span>
-<span class="co">#&gt; 3:  1 2002-09-14 25000 1956-03-18</span>
-<span class="co">#&gt; 4:  1 2004-01-31  2500 1956-03-18</span>
-<span class="co">#&gt; 5:  1 2004-01-31  2724 1956-03-18</span>
-<span class="co">#&gt; 6:  1 2004-01-31  5649 1956-03-18</span>
+<span class="co">#&gt;    ID       date   ICD dataLength   birthday</span>
+<span class="co">#&gt; 1:  1 2002-09-14  5649  1959 days 1956-03-18</span>
+<span class="co">#&gt; 2:  1 2002-09-14  2724  1959 days 1956-03-18</span>
+<span class="co">#&gt; 3:  1 2002-09-14 25000  1959 days 1956-03-18</span>
+<span class="co">#&gt; 4:  1 2004-01-31  2500  1959 days 1956-03-18</span>
+<span class="co">#&gt; 5:  1 2004-01-31  2724  1959 days 1956-03-18</span>
+<span class="co">#&gt; 6:  1 2004-01-31  5649  1959 days 1956-03-18</span>
 <span class="va">windowcut</span> <span class="op">&lt;-</span> <span class="fu">cutWindow</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">forcut</span> , 
                        idColName <span class="op">=</span> <span class="va">ID</span> ,
                        icdColName <span class="op">=</span> <span class="va">ICD</span> , 
@@ -212,12 +217,13 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
                        predictGap <span class="op">=</span> <span class="fl">180</span> ,
                        window <span class="op">=</span> <span class="fl">360</span> , 
                        N <span class="op">=</span> <span class="fl">5</span> ,
-                       countICD_toCCS <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>
+                       countICD_toCCS <span class="op">=</span> <span class="fl">2</span>
+                       <span class="op">)</span>
 <span class="co">#&gt; Wrong ICD format: total 222 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (944)", "5640 (620)", "2500 (269)", "6009 (224)", "M791 (150)", "5714 (144)", "5210 (125)", "7805 (120)", "V670 (115)", "V048 (114)")</span>
+<span class="co">#&gt; c("585 (944)", "5640 (620)", "2500 (269)", "6009 (223)", "M791 (150)", "5714 (144)", "5210 (124)", "7805 (120)", "V670 (115)", "V048 (114)")</span>
 <span class="co">#&gt;  </span>
 <span class="co">#&gt; Wrong ICD format: total 50 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (116)", "M791 (89)", "E780 (41)", "E784 (33)", "2500 (23)", "5714 (22)", "E11359 (19)", "V451 (17)", "F328 (15)", "T1490 (15)")</span>
+<span class="co">#&gt; c("585 (116)", "M791 (89)", "E780 (41)", "E784 (33)", "2500 (23)", "5714 (22)", "E11359 (18)", "V451 (17)", "F328 (15)", "T1490 (15)")</span>
 <span class="co">#&gt;  </span>
 <span class="co">#&gt; Wrong ICD format: total 64 ICD codes (the number of occurrences is in brackets)</span>
 <span class="co">#&gt; c("585 (132)", "M791 (61)", "E780 (54)", "E784 (48)", "H3532 (25)", "K0532 (24)", "2500 (22)", "E11359 (16)", "T1490 (16)", "5640 (15)")</span>
@@ -229,7 +235,7 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 <span class="co">#&gt; c("585 (185)", "5640 (111)", "0414 (38)", "V155 (37)", "V135 (35)", "5997 (22)", "6009 (21)", "5234 (16)", "5210 (14)", "V048 (14)")</span>
 <span class="co">#&gt;  </span>
 <span class="co">#&gt; Wrong ICD format: total 38 ICD codes (the number of occurrences is in brackets)</span>
-<span class="co">#&gt; c("585 (182)", "5640 (60)", "5210 (34)", "V048 (20)", "6009 (17)", "2740 (11)", "5997 (11)", "2500 (7)", "6000 (7)", "2429 (6)")</span>
+<span class="co">#&gt; c("585 (182)", "5640 (60)", "5210 (33)", "V048 (20)", "6009 (17)", "2740 (11)", "5997 (11)", "2500 (7)", "6000 (7)", "2429 (6)")</span>
 <span class="co">#&gt;  </span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    window_N periodAge  ID ccs_1 ccs_2 ccs_3 ccs_4 ccs_5 ccs_6 ccs_7</span>
@@ -377,7 +383,7 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <p>另外，需設定的參數有：<br><code>predictorColName</code>：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>method</code> : 設有兩種方式將各時間區間的結果進行統計計算最後的預測結果，第一為加權的方式，method=“weighting”，第一為投票的方式，method=“vote”。<br>
 此外，根據放入的feature，函式自動會使用對應區間的特徵。</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">coxmodel</span> <span class="op">&lt;-</span> <span class="fu">analWindow_Cox</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span>,
+<code class="sourceCode R"><span class="va">coxmodel</span> <span class="op">&lt;-</span> <span class="fu">analWindow_Cox</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span><span class="op">[</span><span class="va">window_N</span> <span class="op">!=</span> <span class="st">"all"</span><span class="op">]</span>,
                          DataFile_feature <span class="op">=</span> <span class="va">feature</span>,
                          DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
                          idColName <span class="op">=</span> <span class="va">ID</span>,
@@ -388,11 +394,109 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
                          testN <span class="op">=</span> <span class="fl">3</span>,
                          method<span class="op">=</span><span class="st">"weighting"</span><span class="op">)</span>
 <span class="co">#&gt; same features in all windows</span>
-<span class="co">#&gt; Error in 1:N: NA/NaN argument</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
+<span class="co">#&gt; Setting levels: control = 0, case = 1</span>
+<span class="co">#&gt; Setting direction: controls &lt; cases</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
-<span class="co">#&gt; Error in head(coxmodel$model_table[[1]]): object 'coxmodel' not found</span>
+<span class="co">#&gt;    features exp(coef) lower .95 upper .95 Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt; 1:  ccs_134     1.619      0.44     5.957    0.469        19</span>
+<span class="co">#&gt; 2:  ccs_136         0         0       Inf    0.999        10</span>
+<span class="co">#&gt; 3:  ccs_138     0.445     0.053     3.708    0.454        15</span>
+<span class="co">#&gt; 4:  ccs_159     1.846     0.205    16.627    0.584        11</span>
+<span class="co">#&gt; 5:  ccs_197     1.771     0.377     8.324    0.469        15</span>
+<span class="co">#&gt; 6:  ccs_205     0.876     0.101     7.612    0.904        12</span>
+<span class="co">#&gt;                                           CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt; 1:                                 Other upper respiratory disease</span>
+<span class="co">#&gt; 2:                                      Disorders of teeth and jaw</span>
+<span class="co">#&gt; 3:                                            Esophageal disorders</span>
+<span class="co">#&gt; 4:                                        Urinary tract infections</span>
+<span class="co">#&gt; 5:                         Skin and subcutaneous tissue infections</span>
+<span class="co">#&gt; 6: Spondylosis; intervertebral disc disorders; other back problems</span>
+<span class="co">#&gt;                                                    CCS_LVL_2_LABEL</span>
+<span class="co">#&gt; 1:                                 Other upper respiratory disease</span>
+<span class="co">#&gt; 2:                                      Disorders of teeth and jaw</span>
+<span class="co">#&gt; 3:                                Upper gastrointestinal disorders</span>
+<span class="co">#&gt; 4:                                  Diseases of the urinary system</span>
+<span class="co">#&gt; 5:                         Skin and subcutaneous tissue infections</span>
+<span class="co">#&gt; 6: Spondylosis; intervertebral disc disorders; other back problems</span>
+<span class="co">#&gt;                                                 CCS_LVL_1_LABEL</span>
+<span class="co">#&gt; 1:                           Diseases of the respiratory system</span>
+<span class="co">#&gt; 2:                             Diseases of the digestive system</span>
+<span class="co">#&gt; 3:                             Diseases of the digestive system</span>
+<span class="co">#&gt; 4:                         Diseases of the genitourinary system</span>
+<span class="co">#&gt; 5:                 Diseases of the skin and subcutaneous tissue</span>
+<span class="co">#&gt; 6: Diseases of the musculoskeletal system and connective tissue</span>
 <span class="va">coxmodel</span><span class="op">$</span><span class="va">evaluation_test</span>
-<span class="co">#&gt; Error in eval(expr, envir, enclos): object 'coxmodel' not found</span></code></pre></div>
+<span class="co">#&gt; [1] 0.6446078 0.5394265 0.6132812 0.5991052</span></code></pre></div>
 <p>以上述結果說明：<br>
 model_table為各時間區間進行Cox迴歸後的結果。<br>
 evaluation_test為統計各時間區間的最終預測結果。</p>
@@ -434,7 +538,7 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
 <span class="co">#                         # units=16,</span>
 <span class="co">#                         testN=2)</span>
 
-<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM2</span><span class="op">(</span>DataFile_cutData<span class="op">=</span><span class="va">windowcut</span><span class="op">[</span>,<span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"periodAge"</span><span class="op">)</span><span class="op">]</span>,
+<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span><span class="op">[</span><span class="va">window_N</span> <span class="op">!=</span> <span class="st">"all"</span><span class="op">]</span>,
                          DataFile_personal<span class="op">=</span><span class="va">personal</span>,
                          labelColName <span class="op">=</span> <span class="va">label</span>,
                          predictorColName<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span>,
@@ -447,26 +551,26 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
                         <span class="co"># layer2_dropout = 0,</span>
                         <span class="co"># layer2_units = 16,</span>
                         <span class="co"># units=16,</span>
-                        testN<span class="op">=</span><span class="fl">4</span><span class="op">)</span>
-<span class="co">#&gt; optimal epoch is  7</span>
+                        testN <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>
+<span class="co">#&gt; optimal epoch is  2</span>
 
 <span class="co">## evaluate</span>
 <span class="va">model</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">model</span>
 <span class="va">x_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">x_test</span>
 <span class="va">y_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">y_test</span>
 <span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_train</span>
-<span class="co">#&gt; [1] 0.7100000 0.6528846 0.6103846 0.6986538 0.6679807</span>
+<span class="co">#&gt; [1] 0.5605769 0.5086538 0.4913462 0.4794231 0.5100000</span>
 <span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_test</span>
-<span class="co">#&gt; [1] 0.7867647 0.8112745 0.7156863 0.6102941 0.7310049</span>
+<span class="co">#&gt; [1] 0.6470588 0.7083334 0.6372549 0.5416666 0.6335784</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">model</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">x_test</span>, <span class="va">y_test</span>, batch_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt;            [,1]</span>
-<span class="co">#&gt; [1,] 0.07285461</span>
-<span class="co">#&gt; [2,] 0.19018909</span>
-<span class="co">#&gt; [3,] 0.17290056</span>
-<span class="co">#&gt; [4,] 0.21653068</span>
-<span class="co">#&gt; [5,] 0.09134886</span>
-<span class="co">#&gt; [6,] 0.14686477</span></code></pre></div>
+<span class="co">#&gt;           [,1]</span>
+<span class="co">#&gt; [1,] 0.1169935</span>
+<span class="co">#&gt; [2,] 0.2379738</span>
+<span class="co">#&gt; [3,] 0.1769803</span>
+<span class="co">#&gt; [4,] 0.2798469</span>
+<span class="co">#&gt; [5,] 0.1431597</span>
+<span class="co">#&gt; [6,] 0.1997117</span></code></pre></div>
 </div>
 <div id="七視覺化" class="section level3">
 <h3 class="hasAnchor">
@@ -492,10 +596,37 @@ DataFile_cutdata可由cutWindow()的輸出獲得。<br>
 DataFile為從analWindow_Cox的輸出可獲得，pvalue為使用者設定。</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
-<span class="co">#&gt; Error in head(coxmodel$model_table[[3]]): object 'coxmodel' not found</span>
+<span class="co">#&gt;    features exp(coef) lower .95 upper .95 Pr(&gt;|z|) caseCount</span>
+<span class="co">#&gt; 1:  ccs_134     0.482     0.108     2.153    0.339        22</span>
+<span class="co">#&gt; 2:  ccs_136         0         0       Inf    0.999         9</span>
+<span class="co">#&gt; 3:  ccs_138     2.687     0.276    26.172    0.395        12</span>
+<span class="co">#&gt; 4:  ccs_159         0         0       Inf    0.999         8</span>
+<span class="co">#&gt; 5:  ccs_197         0         0       Inf    0.999        13</span>
+<span class="co">#&gt; 6:  ccs_205     0.873     0.099     7.725    0.903        18</span>
+<span class="co">#&gt;                                           CCS_CATEGORY_DESCRIPTION</span>
+<span class="co">#&gt; 1:                                 Other upper respiratory disease</span>
+<span class="co">#&gt; 2:                                      Disorders of teeth and jaw</span>
+<span class="co">#&gt; 3:                                            Esophageal disorders</span>
+<span class="co">#&gt; 4:                                        Urinary tract infections</span>
+<span class="co">#&gt; 5:                         Skin and subcutaneous tissue infections</span>
+<span class="co">#&gt; 6: Spondylosis; intervertebral disc disorders; other back problems</span>
+<span class="co">#&gt;                                                    CCS_LVL_2_LABEL</span>
+<span class="co">#&gt; 1:                                 Other upper respiratory disease</span>
+<span class="co">#&gt; 2:                                      Disorders of teeth and jaw</span>
+<span class="co">#&gt; 3:                                Upper gastrointestinal disorders</span>
+<span class="co">#&gt; 4:                                  Diseases of the urinary system</span>
+<span class="co">#&gt; 5:                         Skin and subcutaneous tissue infections</span>
+<span class="co">#&gt; 6: Spondylosis; intervertebral disc disorders; other back problems</span>
+<span class="co">#&gt;                                                 CCS_LVL_1_LABEL</span>
+<span class="co">#&gt; 1:                           Diseases of the respiratory system</span>
+<span class="co">#&gt; 2:                             Diseases of the digestive system</span>
+<span class="co">#&gt; 3:                             Diseases of the digestive system</span>
+<span class="co">#&gt; 4:                         Diseases of the genitourinary system</span>
+<span class="co">#&gt; 5:                 Diseases of the skin and subcutaneous tissue</span>
+<span class="co">#&gt; 6: Diseases of the musculoskeletal system and connective tissue</span>
 <span class="fu">plotHR</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span>,
-       pvalue <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>
-<span class="co">#&gt; Error in gsub(pattern = "`", replacement = "", x = DataFile$CCS_CATEGORY): object 'coxmodel' not found</span></code></pre></div>
+       pvalue <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></code></pre></div>
+<p><img src="dxtime_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
 </div>
 <div id="生存區線視覺化" class="section level4">
 <h4 class="hasAnchor">
@@ -503,14 +634,15 @@ DataFile為從analWindow_Cox的輸出可獲得，pvalue為使用者設定。</p>
 <p>可輸出單個類別變數的存活差異，將病例組與對照組的生存曲線進行視覺化。<br>
 var中填入使用者要看的ccs category。</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">plotSurv</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">record_dm</span>,
+<code class="sourceCode R"><span class="fu">plotSurv</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span><span class="op">[</span><span class="va">window_N</span><span class="op">==</span><span class="st">"all"</span><span class="op">]</span>,
+         DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
          idColName <span class="op">=</span> <span class="va">ID</span>,
-         icdColName <span class="op">=</span> <span class="va">ICD</span>,
-         dateColName <span class="op">=</span> <span class="va">date</span>,
-         DataFile_personal <span class="op">=</span> <span class="va">pat_dm</span>,
          labelColName <span class="op">=</span> <span class="va">label</span>,
-         varColName <span class="op">=</span> <span class="st">"Essential hypertension"</span><span class="op">)</span>
-<span class="co">#&gt; Error in plotSurv(DataFile = record_dm, idColName = ID, icdColName = ICD, : unused arguments (icdColName = ICD, dateColName = date, varColName = "Essential hypertension")</span></code></pre></div>
+         dataLengthColName <span class="op">=</span> <span class="va">dataLength</span>,
+         ccsDescription <span class="op">=</span> <span class="st">"Essential hypertension"</span><span class="op">)</span>
+<span class="co">#&gt; Scale for 'colour' is already present. Adding another scale for 'colour',</span>
+<span class="co">#&gt; which will replace the existing scale.</span></code></pre></div>
+<p><img src="dxtime_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
 </div>
 </div>
 </div>
