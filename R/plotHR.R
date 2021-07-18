@@ -1,8 +1,16 @@
 plotHR <- function(DataFile,pvalue=0.05){
-
+  #DataFile[[]] <- DataFile[[1]]
   DataFile$CCS_CATEGORY <- gsub(pattern = '`',replacement = '',x = DataFile$CCS_CATEGORY)
-  DataFile <- merge(DataFile,unique(ccstable[,.(CCS_CATEGORY,CCS_CATEGORY_DESCRIPTION)]),all.x = T)
-  DataFile[is.na(CCS_CATEGORY_DESCRIPTION),CCS_CATEGORY_DESCRIPTION:= CCS_CATEGORY]
+  DataFile <- DataFile[caseCount != 0]
+  ccstable <- ccstable
+  #ccstable[,features:= lapply(.SD,function(x)ifelse(grepl("[0-9]+",x),paste0("ccs_",x),x)),.SDcols="CCS_CATEGORY"]
+
+  if(is.null(DataFile$CCS_CATEGORY_DESCRIPTION)){
+    DataFile <- merge(DataFile,unique(ccstable[,.(CCS_CATEGORY,CCS_CATEGORY_DESCRIPTION)]),all.x = T,by.x="features",by.y="CCS_CATEGORY")
+  }
+
+
+  DataFile[is.na(CCS_CATEGORY_DESCRIPTION),CCS_CATEGORY_DESCRIPTION:= features]
   df <- data.frame(boxLabels = DataFile$CCS_CATEGORY_DESCRIPTION,
                    yAxis = length(DataFile$CCS_CATEGORY_DESCRIPTION):1,
                    boxHRs = as.numeric(DataFile$`exp(coef)`),
@@ -24,6 +32,8 @@ plotHR <- function(DataFile,pvalue=0.05){
           panel.grid = element_line(color = "grey80", size = 0.5)) +
     annotate(geom = "text", y =Inf, x = -Inf, label =label,vjust = -1 ,hjust= 1.5,size = 3.5) +
     ylab("Hazard ratio") +
-    xlab("CCScategory")
+    xlab("CCScategory") +
+    ggtitle("HR (95% CI)")
+
   return(p)
 }

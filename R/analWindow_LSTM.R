@@ -1,25 +1,36 @@
-analWindow_LSTM <- function(DataFile_cutdata,window_N,ID,periodAge=NULL,DataFile_personal,label,predictor=c(),N,batch_size=100,Epoch=10,units=16){
+analWindow_LSTM <- function(DataFile_cutData,DataFile_personal,labelColName,DataFile_feature=NULL,predictorColName=NULL,N,batch_size=100,Epoch=10,layer=1,layer1_dropout=0,layer1_units=16,layer2_dropout=0,layer2_units=16,testN=100){
+  set_random_seed(10)
 
   #input cutdata
-  DataFile_cutdata <- as.data.table(DataFile_cutdata)
+  DataFile_cutData <- as.data.table(DataFile_cutData)
   ccscategory <- c(ccstable$CCS_CATEGORY %>% unique())
-  if(is.null(periodAge)){
-    dataCol <- c(deparse(substitute(window_N)),deparse(substitute(ID)),ccscategory)
-  }else{
+  if(length(grep("periodAge",names(DataFile_cutData)))>0){
     dataCol <- c(deparse(substitute(window_N)),deparse(substitute(ID)),deparse(substitute(periodAge)),ccscategory)
+  }else{
+    dataCol <- c(deparse(substitute(window_N)),deparse(substitute(ID)),ccscategory)
   }
-  cutdata <- DataFile_cutdata[, dataCol,with=FALSE]
+  cutdata <- DataFile_cutData[, dataCol,with=FALSE]
+  #select feature
+  if(! deparse(substitute(DataFile_feature)) == "NULL"){
+    COXccs_top <- DataFile_feature[[1]][selected==1, "CCS_CATEGORY"]
+    #####tag
+    cutdata <- cbind(cutdata[,1:(ncol(cutdata)-283)],cutdata[,which(names(cutdata) %in% COXccs_top_test$CCS_CATEGORY),with = FALSE])
+  }
+
   #input personal
   DataFile_personal <- as.data.table(DataFile_personal)
-  dataCol <- c(deparse(substitute(ID)),deparse(substitute(label)),predictor)
-  personal <- DataFile_personal[, dataCol,with=FALSE]
-  personal[,c("SEX"):=lapply(.SD,function(x)ifelse(x=="F",0L,1L)),.SDcols=c("SEX")]
+  personal_dataCol <- c(deparse(substitute(ID)),deparse(substitute(labelColName)),predictorColName)
+  DataFile_personal <- DataFile_personal[, personal_dataCol, with=FALSE]
+  names(DataFile_personal) <- c("ID","label",predictorColName)
+
   #將個人資料以及ccs的window資料合併成最後要用的資料表
-  maintable <- merge(cutdata,personal[,c("ID",predictor),with=FALSE],by="ID",all.x=T)
-  if(is.null(periodAge)){
-    maintable <- cbind(maintable[,c("window_N","ID","SEX")],maintable[,-c("window_N","ID","SEX")])
+  maintable <- merge(cutdata,personal[,c("ID",predictorColName),with=FALSE],by="ID",all.x=T)
+
+
+  if(length(grep("periodAge",names(DataFile_cutData)))>0){
+    maintable <- cbind(maintable[,c("window_N","ID",predictorColName,"periodAge"),with=FALSE],maintable[,-c("window_N","ID",predictorColName,"periodAge"),with=FALSE])
   }else{
-    maintable <- cbind(maintable[,c("window_N","ID","SEX","periodAge")],maintable[,-c("window_N","ID","SEX","periodAge")])
+    maintable <- cbind(maintable[,c("window_N","ID",predictorColName),with=FALSE],maintable[,-c("window_N","ID",predictorColName),with=FALSE])
   }
   CCSWide_window <- list()
 
@@ -38,10 +49,45 @@ analWindow_LSTM <- function(DataFile_cutdata,window_N,ID,periodAge=NULL,DataFile
   series <- merge(series, unique(personal[,c("ID","label")]),by="ID",all.x=T)
   class(series)
   series <- as.data.frame(series)
-  series <- series[,order(colnames(series),decreasing=TRUE),]#series??data.frame?A?~?|?O?諸
+  series <- series[,order(colnames(series),decreasing=TRUE),]#series??data.frame?A?~?|?O?諸===
   setDT(series)
   series <- cbind(series[,c("label","ID")],series[,-c("label","ID")])
   series <- series[order(label)]
+
+  #
+  build_model <- function(){
+    #Initialize model
+    model <- keras_model_sequential()
+    if(layer==1){
+      model %>%
+        layer_lstm(layer1_units, batch_input_shape = c(batch_size, X_shape2, X_shape3),return_sequences =FALSE, stateful= TRUE,
+                   kernel_regularizer = regularizer_l2(0.001))%>%
+        layer_dropout(rate=layer1_dropout) %>%
+        #layer_lstm(units, return_sequences = FALSE,stateful= TRUE)%>%
+        #layer_dropout(rate=0.2) %>%
+        layer_dense(16,activation = 'relu') %>%
+        layer_dense(1,activation = 'sigmoid')
+    }else if(layer==2){
+      model %>%
+        layer_lstm(layer1_units, batch_input_shape = c(batch_size, X_shape2, X_shape3),return_sequences =TRUE, stateful= TRUE,
+                   kernel_regularizer = regularizer_l2(0.001)) %>%
+        layer_dropout(rate=layer1_dropout) %>%
+        layer_lstm(layer2_units, return_sequences = FALSE,stateful= TRUE) %>%
+        layer_dropout(rate=layer2_dropout) %>%
+        layer_dense(16,activation = 'relu') %>%
+        layer_dense(1,activation = 'sigmoid')
+    }
+
+
+    # Optimizer
+    model %>% compile(
+      loss = 'binary_crossentropy',
+      optimizer = 'adam',
+      metrics= tf$keras$metrics$AUC())
+    #metrics='acc'
+  }
+
+
 
   ##Split dataset into training and testing sets: 分層抽樣
   ##取train
@@ -59,13 +105,6 @@ analWindow_LSTM <- function(DataFile_cutdata,window_N,ID,periodAge=NULL,DataFile
   train <- rbind(train_T,train_F)
   test <- rbind(test_T,test_F)
 
-
-  #讓放進去的個案最後能被整除
-  test_sam <- sample(1:nrow(test))[1:(nrow(test)-nrow(test) %% batch_size)]#為了能整除刪除了nrow(test) %% batch_size筆data
-  test <- test[test_sam,,]
-  y_test = array(unlist(test[, 1]))
-  x_test = test[, 3:ncol(test)]
-  x_test <- array(unlist(x_test),dim=c(nrow(test),N,(ncol(test)-2)/N))
   ###Modeling
   X_shape2 = N
   X_shape3 = (ncol(train)-2)/N
@@ -78,32 +117,13 @@ analWindow_LSTM <- function(DataFile_cutdata,window_N,ID,periodAge=NULL,DataFile
   metrics ="accuracy"
 
   #model definition
-  build_model <- function(){
-    #Initialize model
-    model <- keras_model_sequential()
-    model %>%
-      layer_lstm(units, batch_input_shape = c(batch_size, X_shape2, X_shape3),return_sequences =FALSE, stateful= TRUE,
-                 kernel_regularizer = regularizer_l2(0.001))%>%
-      #layer_dropout(rate=0.2) %>%
-      #layer_lstm(units, return_sequences = FALSE,stateful= TRUE)%>% #statereful?e?@??batchsize???ǦC?O?ЬO?_?Ǩ??U?@??batchsize
-      # layer_dropout(rate=0.2) %>%
-      layer_dense(16,activation = 'relu') %>%
-      layer_dense(1,activation = 'sigmoid')
-
-    # Optimizer
-    model %>% compile(
-      loss = 'binary_crossentropy',
-      optimizer = 'adam',
-      metrics= tf$keras$metrics$AUC())
-    #metrics='acc'
-  }
 
 
   ##tune the model
   k <- 5
   set.seed(2)
   sam_T <- sample(1:nrow(train[label==1]))
-  train_T <- train[label==1,,][sam_T[1:nrow(train[label==1])-nrow(train[label==1])%% k]]#traindata中，為了可以切分train test，刪除nrow(train[label==1])%% N個size
+  train_T <- train[label==1,,][sam_T[1:(nrow(train[label==1])-nrow(train[label==1])%% k)]]#traindata中，為了可以切分train test，刪除nrow(train[label==1])%% N個size
   dices_T  <- sample(1:nrow(train_T[label==1]))
   folds_T <- cut(dices_T, breaks = 5, label = FALSE)#train test 8:2
   sam_F <- sample(1:nrow(train[label==0]))
@@ -157,21 +177,59 @@ analWindow_LSTM <- function(DataFile_cutdata,window_N,ID,periodAge=NULL,DataFile
   msg <- paste("optimal epoch is ",optimalEpoch)
   message(msg)
   Sys.sleep(1)
-  ##讓train data可以整除batch size
-  train_sam <- sample(1:nrow(newtrain))[1:(nrow(newtrain)-nrow(newtrain) %% batch_size)] #vaildation中為了能整除，刪除了length(val_indices) %% batch_size筆data
-  train_data <- x_newtrain[train_sam,,]
-  train_targets <- y_newtrain[train_sam]
-  ##train
-  model <- build_model()
-  model %>% fit(
-    x = train_data,
-    y = train_targets,
-    batch_size = batch_size,
-    epoch= optimalEpoch ,
-    verbose = 1,
-    shuffle = FALSE
-    #validation_data = list(val_data,val_targets)
-  )
-  auc <- model %>% evaluate(x_test, y_test, batch_size = batch_size)
-  return(list(model=model,x_test=x_test,y_test=y_test,evaluation=auc))
+
+  #
+  test_average_auc <- c()
+  train_average_auc <- c()
+  for(j in 1:testN){
+
+    #
+    ##Split dataset into training and testing sets: 分層抽樣
+    ##取train
+    #label = T
+    dices_T  <- sample(1:nrow(series[label==1,,]))
+    folds_T <- cut(dices_T, breaks = 5, label = FALSE)#train test 8:2
+    dices_F  <- sample(1:nrow(series[label==0,,]))
+    folds_F <- cut(dices_F, breaks = 5, label = FALSE)#train test 8:2
+    test_indices_T <- which(folds_T == 1 , arr.ind = TRUE)
+    test_T <- series[label==1,,][test_indices_T,,]
+    test_indices_F <- which(folds_F == 1 , arr.ind = TRUE)
+    test_F <- series[label==0,,][test_indices_F,,]
+    train_T <- series[label==1,,][-test_indices_T,,]
+    train_F <- series[label==0,,][-test_indices_F,,]
+    train <- rbind(train_T,train_F)
+    test <- rbind(test_T,test_F)
+
+
+    #讓放進去的個案最後能被整除
+    test_sam <- sample(1:nrow(test))[1:(nrow(test)-nrow(test) %% batch_size)]#為了能整除刪除了nrow(test) %% batch_size筆data
+    test <- test[test_sam,,]
+    y_test = array(unlist(test[, 1]))
+    x_test = test[, 3:ncol(test)]
+    x_test <- array(unlist(x_test),dim=c(nrow(test),N,(ncol(test)-2)/N))
+    ##讓train data可以整除batch size
+    train_sam <- sample(1:nrow(newtrain))[1:(nrow(newtrain)-nrow(newtrain) %% batch_size)] #vaildation中為了能整除，刪除了length(val_indices) %% batch_size筆data
+    train_data <- x_newtrain[train_sam,,]
+    train_targets <- y_newtrain[train_sam]
+    ##train
+    model <- build_model()
+    model %>% fit(
+      x = train_data,
+      y = train_targets,
+      batch_size = batch_size,
+      epoch= optimalEpoch ,
+      verbose = 1,
+      shuffle = FALSE
+      #validation_data = list(val_data,val_targets)
+    )
+    A <- model %>% evaluate(x_test, y_test, batch_size = batch_size)
+    test_evaluation <- model %>% evaluate(x_test, y_test, batch_size = batch_size)
+    test_average_auc[j] <- test_evaluation[[2]]
+    train_evaluation <- model %>% evaluate(train_data, train_targets, batch_size = batch_size)
+    train_average_auc[j] <- train_evaluation[[2]]
+
+  }
+  test_average_auc[j+1] <- mean(test_average_auc[1:j])
+  train_average_auc[j+1] <- mean(train_average_auc[1:j])
+  return(list(model=model,x_test=x_test,y_test=y_test,evaluation_train=train_average_auc,evaluation_test=test_average_auc,A=A))
 }

@@ -1,28 +1,40 @@
-selectFeature <- function(DataFile,ID,ICD,date,label,casecountRate_limit=0.001,type="single",isDescription=F,predictWindow,window=NULL,N=NULL,countICD_toccs=2,pvalue=0.05){
+selectFeature <- function(DataFile_cutData,DataFile_personal,idColName,labelColName,dataLengthColName,caseCountRate_limit=0.001,type="single",isDescription=F,method="allWindow",pvalue=0.05){
 
-  if(is.null(N)){N <- 1}
-  DataFile <- as.data.table(DataFile)
-  dataCol <- c(deparse(substitute(ID)),deparse(substitute(ICD)),deparse(substitute(date)),deparse(substitute(label)))
-  DataFile <- DataFile[,dataCol,with = FALSE]
-  cutdata <- cutWindow(DataFile, ID, ICD, date, predictWindow=predictWindow , window=window , N=N , countICD_toccs=countICD_toccs)
-  casecount_limit <- casecountRate_limit*length(unique(DataFile$ID))
+  if(method=="allWindow"){
+    N <- 1
+  }else if(method=="perWindow"){
+    DataFile_cutData <- DataFile_cutData[window_N!="all"]
+    DataFile_cutData$window_N <- as.integer(DataFile_cutData$window_N)
+    N <- max(DataFile_cutData$window_N)
+  }
+  cutdata <- as.data.table(DataFile_cutData)
+  ccscategory <- unique(c(ccstable$CCS_CATEGORY))
+  dataCol <- c(deparse(substitute(ID)),deparse(substitute(window_N)),ccscategory)
+  cutdata <- cutdata[,dataCol,with = FALSE]
+  #cutdata <- cutWindow(DataFile, ID, ICD, date, predictGap=predictGap , window=window , N=N , countICD_toccs=countICD_toccs)
+
+  DataFile_personal <- as.data.table(DataFile_personal)
+  dataCol <- c(deparse(substitute(idColName)),deparse(substitute(labelColName)),deparse(substitute(dataLengthColName)))
+  personal <- DataFile_personal[,dataCol, with=FALSE]
+  names(personal) <- c("ID","futat","futime")
+  casecount_limit <- caseCountRate_limit*length(unique(personal$ID))
 
   COXccs_summary <- list()
   for(i in 1:N){
     ##取該window的數據
-    cutdata_bywindow <- cutdata[window_N == i,-c("window_N")]
-    DataFile <- DataFile[, c("predfirstdate", "indexdate") := list(min(date), max(date)), by=ID]
-    ##原始資料取futime數據
-    DataFile_case <- DataFile[,c("ID","futat","futime") := list(ID,label,indexdate-predfirstdate),][,c("ID","futat","futime"),]
-    DataFile_case <- unique(DataFile_case)
-    DataFile_case <- merge(DataFile_case,cutdata_bywindow,by="ID",all.x=T)
+    if(N==1){
+      cutdata_bywindow <- cutdata[window_N == "all",-c("window_N")]
+    }else{
+      cutdata_bywindow <- cutdata[window_N == i,-c("window_N")]
+    }
+    personal_bywindow <- merge(personal,cutdata_bywindow,by="ID",all.x=T)
     ##決定以mul/single進行特徵選取
     if(type=="mul"){
       #string <- paste(colnames(temp)[4:(ncol(CCSWide)+2)], collapse = "`+`")########從這
-      string <- paste(colnames(DataFile_case)[4:(ncol(DataFile_case))], collapse = "`+`")##因為變數太多會跑不動，所以先到50
+      string <- paste(colnames(personal_bywindow)[4:(ncol(personal_bywindow))], collapse = "`+`")##因為變數太多會跑不動，所以先到50
       string2 <- paste0("`", string, "`")
       f1 <- as.formula(paste("Surv(futime, futat) ~ ", string2))###從這0715 a.m.12:27
-      ova.fit <- coxph(f1, data = DataFile_case)#Error: no function to return from, jumping to top level
+      ova.fit <- coxph(f1, data = personal_bywindow)#Error: no function to return from, jumping to top level
       ova.fit
       COXccs <- summary(ova.fit)
       COXccs <- as.data.table(COXccs$coefficients, COXccs$conf.int)
@@ -30,10 +42,10 @@ selectFeature <- function(DataFile,ID,ICD,date,label,casecountRate_limit=0.001,t
     }else if(type=="single"){
       ###(單)
       COXccs <- data.table()
-      for(j in 4:ncol(DataFile_case)){
-        string2 <- paste0("`", colnames(DataFile_case)[j], "`")
+      for(j in 4:ncol(personal_bywindow)){
+        string2 <- paste0(colnames(personal_bywindow)[j])
         f1 <- as.formula(paste("Surv(futime, futat) ~ ", string2))
-        ova.fit_sg <- coxph(f1,data = DataFile_case)
+        ova.fit_sg <- coxph(f1,data = personal_bywindow)
         COXccs_sgtemp <- summary(ova.fit_sg)
         COXccs <- rbind(COXccs,as.data.table(COXccs_sgtemp$coefficients, COXccs_sgtemp$conf.int))
         setDT(COXccs)
@@ -44,13 +56,13 @@ selectFeature <- function(DataFile,ID,ICD,date,label,casecountRate_limit=0.001,t
     CCSWide_num <- setDT(cutdata_bywindow)[,lapply(cutdata_bywindow[,2:ncol(cutdata_bywindow)],sum),]
     #CCSWide_num <- gather(CCSWide_num,key=rn,value=count)
     CCSWide_num <- melt(setDT(CCSWide_num), na.rm = TRUE)[,.(CCS_CATEGORY=variable,count=value)]
-    CCSWide_num$CCS_CATEGORY <- paste0("`",CCSWide_num$CCS_CATEGORY,"`")
+    CCSWide_num$CCS_CATEGORY <- paste0(CCSWide_num$CCS_CATEGORY)
     COXccs <- merge(COXccs,CCSWide_num,by="CCS_CATEGORY",all.x=T)
     ##決定是否增加文字說明
     if(isDescription==T){
       COXccs_des <- unique(ccstable[,c("CCS_CATEGORY","CCS_CATEGORY_DESCRIPTION","CCS_LVL_1_LABEL","CCS_LVL_2_LABEL"),])
       #COXccs_des <- setnames(COXccs_des,"CCS_CATEGORY","CCS_CATEGORY")
-      COXccs_des$CCS_CATEGORY <- paste0("`",COXccs_des$CCS_CATEGORY,"`")
+      COXccs_des$CCS_CATEGORY <- paste0(COXccs_des$CCS_CATEGORY)
       COXccs <- merge(COXccs,COXccs_des,by="CCS_CATEGORY",all.x=T)
       COXccs <- COXccs[, c("CCS_CATEGORY","exp(coef)","Pr(>|z|)","count","CCS_CATEGORY_DESCRIPTION","CCS_LVL_1_LABEL","CCS_LVL_2_LABEL")]
     }else{
@@ -60,8 +72,10 @@ selectFeature <- function(DataFile,ID,ICD,date,label,casecountRate_limit=0.001,t
     COXccs <- COXccs[`Pr(>|z|)` < pvalue & count > casecount_limit , c("selected") := TRUE]
     COXccs[is.na(COXccs$selected),"selected"] <- FALSE
     setnames(COXccs,c("exp(coef)","count"),c("HR","caseCount"))
+    COXccs$`Pr(>|z|)` <- round(COXccs$`Pr(>|z|)`,3)
+    COXccs$HR <- round(COXccs$HR,3)
     COXccs_summary[[i]] <- COXccs
-
+    options(scipen=999)
   }
   return(COXccs_summary)
 }
