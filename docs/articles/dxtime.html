@@ -67,7 +67,7 @@
       <h1 data-toc-skip>Getting started with dxtime</h1>
                         <h4 class="author">Yi-An, Zhu</h4>
             
-            <h4 class="date">2021-07-18</h4>
+            <h4 class="date">2021-07-19</h4>
       
       
       <div class="hidden name"><code>dxtime.Rmd</code></div>
@@ -233,9 +233,10 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <div id="四選擇特徵" class="section level3">
 <h3 class="hasAnchor">
 <a href="#%E5%9B%9B%E9%81%B8%E6%93%87%E7%89%B9%E5%BE%B5" class="anchor"></a>四、選擇特徵</h3>
-<p>運用時間窗資料，將所有ccs為預測變數，進行Cox單變量回歸後，選出p-value&lt;0.05 &amp; 得病人數&gt;caseCountRate_limit的特徵；<br>
-可以用全長度資料做一次特徵篩選(method = “allWindow”)，也可以做多時間窗(method = “perWindow”)的特徵篩選。</p>
-<p>主要需設定的參數有：<br><code>caseCountRate_limit</code>：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵，此參數的單為為比例，因此不得大於1。<br><code>isDescription</code>：輸出結果是否具備ccs的中文描述。<br><code>method</code>: 選取特徵的方法，method = “perWindow”區分時間窗做特徵選取，method = “allWindow”為不區分時間窗的特徵選取。</p>
+<p>所有ccs為自變數(283個)，label為依變數，進行Cox單變量回歸後，選出p-value&lt;0.05 &amp; 得病人數&gt;caseCountRate_limit*總人數的特徵；<br>
+有兩種方法可以選擇(參考下圖)，第一個為不分時間窗的特徵篩選(method = “allWindow”)，第二則是依照時間窗的區隔(method = “perWindow”)做特徵篩選。</p>
+<p><img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/selectFeature.png" style="display:block; margin:auto; width:100%;"></p>
+<p>主要需設定的參數有：<br><code>caseCountRate_limit</code>：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵，此參數的單位為比例，因此不得大於1。<br><code>isDescription</code>：輸出結果是否具備ccs的中文描述。<br><code>method</code>: 選取特徵的方法，method = “allWindow”為不區分時間窗的特徵選取，method = “perWindow”區分時間窗做特徵選取。</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">DataFile_rec</span><span class="op">)</span>
 <span class="co">#&gt; NULL</span>
