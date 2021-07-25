@@ -22,8 +22,9 @@ Imports:
     keras,
     tidyr,
     dxpr,
-    GGally,
-    ggplot2
+    ggplot2,
+    pROC,
+    GGally
 Remotes:
     DHLab-TSENG/dxpr
 Depends: 
