@@ -67,7 +67,7 @@
       <h1 data-toc-skip>Getting started with dxtime</h1>
                         <h4 class="author">Yi-An, Zhu</h4>
             
-            <h4 class="date">2021-07-19</h4>
+            <h4 class="date">2021-07-26</h4>
       
       
       <div class="hidden name"><code>dxtime.Rmd</code></div>
@@ -81,16 +81,8 @@
 <a href="#%E5%AE%89%E8%A3%9D%E5%A5%97%E4%BB%B6" class="anchor"></a>安裝套件</h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span>
-<span class="co"># Install development version from GitHub</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"DHLab-TSENG/dxtime"</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dxtime</span><span class="op">)</span></code></pre></div>
-<pre><code>## Warning: package 'C:/Users/anay1/Desktop/R/dxtime' is not available for this version of R
-## 
-## A version of this package for your version of R might be available elsewhere,
-## see the ideas at
-## https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages</code></pre>
-<pre><code>## Warning: replacing previous import 'data.table::transpose' by 'purrr::transpose'
-## when loading 'dxtime'</code></pre>
 </div>
 <div id="範例資料" class="section level2">
 <h2 class="hasAnchor">
@@ -98,7 +90,7 @@
 <p>以下功能介紹皆以<code>pat_dm</code>以及<code>record_dm</code>做為範例。<br>
 pat_dm中共200名個案，170位病例組(label=1)，30位為對照組(label=0);<br>
 record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診斷紀錄。</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">pat_dm</span><span class="op">)</span>
 <span class="co">#&gt;    ID   birthday gender label age</span>
 <span class="co">#&gt; 1:  1 1956-03-18      F     0  50</span>
@@ -127,7 +119,7 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 為避免這種偏誤，固定追蹤時長是較佳的作法。但每個樣本的發病日期(indexDate)並不相同，在filterCasesRecords()可回推追蹤時間，找出追蹤時間範圍內的診斷資料；此外，資料長度不足的樣本也可將之排除。</p>
 <p>主要需設定的參數有:<br><code>predictGap</code>: 預測天數，意指「想要於指標日多久前進行預測」。<br><code>exposurePeriod</code>：此研究所設定的危險因子暴露時長，將用於篩選時間範圍內的診斷紀錄。<br><code>includePeriodAtLeast</code>：病患須擁有的資料長度下限。結果將依設定將資料長度不足的個案於以排除，預設為0。<br><code>countICDAtLeast</code>：病患須擁有的資料筆數下限，若是診斷紀錄的筆數過少，有可能意味著該個案極少至此醫療單位看診，研究者可設定診斷紀錄的數量下限，來決定是否採納此個案之紀錄，預設為0。<br><code>align</code>：設定納入資料的方式，是由起始點往後(align=“left”)，或是預測點往回推(align=“right”)，預設為right。</p>
 <p>執行結束會產生兩種結果，分別是Patient(病患資料)及Record(診斷資料)。</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#dxData &lt;- merge(record_dm,pat_dm[,c("ID","label")],by="ID",all.x=T)</span>
 <span class="va">length</span> <span class="op">&lt;-</span> <span class="fu">filterCasesRecords</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">record_dm</span>,
                              idColName <span class="op">=</span> <span class="va">ID</span>,
@@ -166,7 +158,7 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 第一為method=“derict”，直接將干擾變數的條件相同者進行配對<br>
 第二為method=“pscore”，傾向配對法，將配對變數置入羅吉斯回歸中，得到所有干擾因子的發病機率pscore，最後以pscore相同者配對，找出匹配病例組的對照組。<br>
 使用者須給定要匹配的變量以及label。將匹配變量以向量輸入至<code>matchedVariable</code>參數。結果會輸出被配對到個個案以及傾向配對分數。</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">match</span> <span class="op">&lt;-</span> <span class="fu">matchCases</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">pat_dm</span>,
                     idColName <span class="op">=</span> <span class="va">ID</span>,
                     labelColName <span class="op">=</span> <span class="va">label</span>,
@@ -195,9 +187,9 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
 <p>隨著追蹤的時間點不同，其他疾病與觀察疾病的相關程度會有所不同，使用cutWindow()能將追蹤期間切分為數個時間窗，依照時間窗呈現出樣本罹患所有疾病的狀況，並且以grouped code的方式，將ICD以CCS分類，最後以二元碼的方式呈現。<br>
 在劃分時間窗時，除了群組編碼的轉換，也能進行年齡計算，由於年齡會隨時間變化，同一個樣本在不同時間窗的年齡會隨之推移，因此cutWindow()可在切分時間窗時一併進行窗內年齡的計算，最後可選擇以二元碼(預設以45歲為分界)或以實際數值的型態呈現。</p>
 <p>主要需設定的參數有:<br><code>birthdayColName</code>:此參數為計算年齡需使用到的參數，可利用birthday計算出的每個時間窗的年齡periodage並以數字型態呈現，若需要以二元形式呈現，可用<code>binaryage=T</code>，預設會以45歲為分界，也可以使用<code>agelayer</code>自行設定分界。若輸入資料沒包含生日，則不會進行區間年齡的計算。 <code>N</code>：設定時間窗數量，注意：若該個案在某時間窗中沒有診斷資料，將會自動補0。<br><code>countICD_toCCS</code>：定義在追蹤期間，多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)。</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">#forcut &lt;- merge(length$Record %&gt;% filter(ID %in% match$ID),pat_dm[,.(ID,birthday)],all.x=T)</span>
-<span class="va">forcut</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">record_dm</span>,<span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">birthday</span><span class="op">)</span><span class="op">]</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">forcut</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">record_dm</span>,<span class="va">pat_dm</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">birthday</span><span class="op">)</span><span class="op">]</span>,all.x<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
+<span class="co">#forcut &lt;- merge(length$Record %&gt;% filter(ID %in% match$ID),pat_dm[,.(ID,birthday)],all.x=T)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">forcut</span><span class="op">)</span>
 <span class="co">#&gt;    ID       date   ICD dataLength   birthday</span>
 <span class="co">#&gt; 1:  1 2002-09-14  5649  1959 days 1956-03-18</span>
@@ -237,9 +229,15 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 有兩種方法可以選擇(參考下圖)，第一個為不分時間窗的特徵篩選(method = “allWindow”)，第二則是依照時間窗的區隔(method = “perWindow”)做特徵篩選。</p>
 <p><img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/selectFeature.png" style="display:block; margin:auto; width:100%;"></p>
 <p>主要需設定的參數有：<br><code>caseCountRate_limit</code>：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵，此參數的單位為比例，因此不得大於1。<br><code>isDescription</code>：輸出結果是否具備ccs的中文描述。<br><code>method</code>: 選取特徵的方法，method = “allWindow”為不區分時間窗的特徵選取，method = “perWindow”區分時間窗做特徵選取。</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">DataFile_rec</span><span class="op">)</span>
-<span class="co">#&gt; NULL</span>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">Record</span><span class="op">)</span>
+<span class="co">#&gt;     ID  ICD       date</span>
+<span class="co">#&gt; 1: 149 4019 2015-07-08</span>
+<span class="co">#&gt; 2: 149 2720 2015-07-08</span>
+<span class="co">#&gt; 3: 149 7840 2015-07-08</span>
+<span class="co">#&gt; 4: 149 4019 2015-09-30</span>
+<span class="co">#&gt; 5: 149 2720 2015-09-30</span>
+<span class="co">#&gt; 6: 149 7840 2015-09-30</span>
 <span class="va">record_dm</span> <span class="op">&lt;-</span> <span class="va">record_dm</span>
 <span class="va">lengthdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">record_dm</span><span class="op">[</span>,<span class="va">dataLength</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,by<span class="op">=</span><span class="st">"ID"</span><span class="op">]</span><span class="op">[</span>,<span class="fu">.</span><span class="op">(</span><span class="va">ID</span>,<span class="va">dataLength</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#lengthdata &lt;- unique(length$Record[,dataLength:=max(date)-min(date),by="ID"][,.(ID,dataLength)])</span>
@@ -295,7 +293,7 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 1. <strong>DataFile_cutdata</strong>：劃分為時間窗的資料，使用cutWindow function可以獲得；<br>
 2. <strong>DataFile_feature</strong>：要放入作為預測變量的特徵；<br>
 3. <strong>DataFile_personal</strong>：個案資料，包含ID、label、gender、age，若有需放入一併建模的特徵，也須於此表中提供欄位；</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    window_N periodAge  ID ccs_1 ccs_2 ccs_3 ccs_4 ccs_5 ccs_6 ccs_7</span>
 <span class="co">#&gt; 1:        1         1   1     0     0     0     0     0     0     0</span>
@@ -364,7 +362,7 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <span class="co">#&gt; 6: 103     0      M  24   672 days</span></code></pre></div>
 <p>另外，需設定的參數有：<br><code>predictorColName</code>：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>method</code> : 設有兩種方式將各時間區間的結果進行統計計算最後的預測結果，第一為加權的方式，method=“weighting”，第一為投票的方式，method=“vote”。<br>
 此外，根據放入的feature，函式自動會使用對應區間的特徵。</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">coxmodel</span> <span class="op">&lt;-</span> <span class="fu">analWindow_Cox</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span><span class="op">[</span><span class="va">window_N</span> <span class="op">!=</span> <span class="st">"all"</span><span class="op">]</span>,
                          DataFile_feature <span class="op">=</span> <span class="va">feature</span>,
                          DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
@@ -375,7 +373,7 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
                          isDescription <span class="op">=</span> <span class="cn">T</span>,
                          testN <span class="op">=</span> <span class="fl">3</span>,
                          method<span class="op">=</span><span class="st">"weighting"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">summarytable</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    features exp(coef) lower .95 upper .95 Pr(&gt;|z|) caseCount</span>
 <span class="co">#&gt; 1:  ccs_134     1.619      0.44     5.957    0.469        19</span>
 <span class="co">#&gt; 2:  ccs_136         0         0       Inf    0.999        10</span>
@@ -418,8 +416,10 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
 1. <strong>DataFile_cutdata</strong>：劃分為時間窗的資料，使用cutWindow()可以建構；<br>
 2. <strong>DataFile_personal</strong>：個案資料，包含ID、label、gender、age，若有需放入一併建模的特徵，也須於此表格提供；<br>
 另外，需設定的參數有：<br><code>predictorColName</code>：除了ccs之外，若是有個案相關資料須一併做為預測變量進行建模，需於此填入變量名稱。並於DataFile_personal提供該變量資料。<br><code>layer</code>: 架構LSTM的重要參數，決定lstm層數，1或2。<br><code>layer1_units</code>:第一層LSTM的神經單元數量，預設為16，常見的還有32、64等。<br><code>layer1_dropout</code>:為避免過擬合，可在每一層訓練完之後，隨機丟棄一些特徵，可以從0至1，常見為0、0.1或0.2。<br><code>layer2_units</code>:若layer設定為2，才需要為第二層設置參數，為神經單元數量，預設為16，常見的還有32、64等。<br><code>layer2_dropout</code>:若layer設定為2，才需要為第二層設置參數。為避免過擬合，可在每一層訓練完之後，隨機丟棄一些特徵，可以從0至1，常見為0、0.1或0.2。<br><code>batch_size</code>：batch size將決定一次訓練的樣本數目，預設為100。<br><code>Epoch</code>：當一個完整的資料集通過了神經網路一次並且返回了一次，這個過程稱為一次epoch，預設為10，表示會從10次epoch中找出經過Validation驗證後找到最佳的迭代次數。</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://keras.rstudio.com">keras</a></span><span class="op">)</span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># install.packages("keras")</span>
+<span class="co"># install.packages("tensorflow")</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://keras.rstudio.com">keras</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/tensorflow">tensorflow</a></span><span class="op">)</span>
 <span class="co">#set_random_seed(10)</span>
 <span class="fu"><a href="https://rdrr.io/pkg/tensorflow/man/install_tensorflow.html">install_tensorflow</a></span><span class="op">(</span><span class="op">)</span>
@@ -429,23 +429,9 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
 <span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html">packageVersion</a></span><span class="op">(</span><span class="st">"keras"</span><span class="op">)</span>
 <span class="co">#&gt; [1] '2.4.0'</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html">packageVersion</a></span><span class="op">(</span><span class="st">"tensorflow"</span><span class="op">)</span>
-<span class="co">#&gt; [1] '2.4.0'</span>
+<span class="co">#&gt; [1] '2.5.0'</span>
 
 <span class="va">personal</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">.SD</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="st">"F"</span>,<span class="fl">0L</span>,<span class="fl">1L</span><span class="op">)</span><span class="op">)</span>,.SDcols<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">]</span>
-<span class="co"># lstm &lt;- analWindow_LSTM(DataFile_cutData=windowcut[,-c("periodAge")],</span>
-<span class="co">#                          DataFile_personal=personal,</span>
-<span class="co">#                          labelColName = label,</span>
-<span class="co">#                          predictorColName=c("gender"),</span>
-<span class="co">#                          N=3,</span>
-<span class="co">#                         batch_size=16,</span>
-<span class="co">#                         Epoch=10,</span>
-<span class="co">#                         layer=1,</span>
-<span class="co">#                         #layer1_dropout = 0.2,</span>
-<span class="co">#                         # layer1_units = 16,</span>
-<span class="co">#                         # layer2_dropout = 0,</span>
-<span class="co">#                         # layer2_units = 16,</span>
-<span class="co">#                         # units=16,</span>
-<span class="co">#                         testN=2)</span>
 
 <span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span><span class="op">[</span><span class="va">window_N</span> <span class="op">!=</span> <span class="st">"all"</span><span class="op">]</span>,
                          DataFile_personal<span class="op">=</span><span class="va">personal</span>,
@@ -463,23 +449,24 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
                         testN <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>
 <span class="co">#&gt; optimal epoch is  2</span>
 
-<span class="co">## evaluate</span>
-<span class="va">model</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">model</span>
-<span class="va">x_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">x_test</span>
-<span class="va">y_test</span> <span class="op">&lt;-</span> <span class="va">lstm</span><span class="op">$</span><span class="va">y_test</span>
-<span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_train</span>
-<span class="co">#&gt; [1] 0.5605769 0.5086538 0.4913462 0.4794231 0.5100000</span>
-<span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_test</span>
-<span class="co">#&gt; [1] 0.6470588 0.7083334 0.6372549 0.5416666 0.6335784</span>
+<span class="co"># lstm &lt;- analWindow_LSTM(DataFile_cutData=windowcut[,-c("periodAge")],</span>
+<span class="co">#                          DataFile_personal=personal,</span>
+<span class="co">#                          labelColName = label,</span>
+<span class="co">#                          predictorColName=c("gender"),</span>
+<span class="co">#                          N=3,</span>
+<span class="co">#                         batch_size=16,</span>
+<span class="co">#                         Epoch=10,</span>
+<span class="co">#                         layer=1,</span>
+<span class="co">#                         #layer1_dropout = 0.2,</span>
+<span class="co">#                         # layer1_units = 16,</span>
+<span class="co">#                         # layer2_dropout = 0,</span>
+<span class="co">#                         # layer2_units = 16,</span>
+<span class="co">#                         # units=16,</span>
+<span class="co">#                         testN=2)</span>
 
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">model</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">x_test</span>, <span class="va">y_test</span>, batch_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt;           [,1]</span>
-<span class="co">#&gt; [1,] 0.1169935</span>
-<span class="co">#&gt; [2,] 0.2379738</span>
-<span class="co">#&gt; [3,] 0.1769803</span>
-<span class="co">#&gt; [4,] 0.2798469</span>
-<span class="co">#&gt; [5,] 0.1431597</span>
-<span class="co">#&gt; [6,] 0.1997117</span></code></pre></div>
+<span class="co">## evaluate</span>
+<span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_test</span>
+<span class="co">#&gt; [1] 0.5882353 0.7524510 0.6617647 0.5686275 0.6427696</span></code></pre></div>
 </div>
 <div id="七視覺化" class="section level3">
 <h3 class="hasAnchor">
@@ -491,20 +478,20 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
 <p>將各時間窗內的各疾病數量以grouped codes的方式視覺化。<br>
 DataFile_cutdata可由cutWindow()的輸出獲得。<br>
 需設定的參數有:<br><code>method</code>:可分為“top”和“ccslevel”，top為計算數量並輸出前N名的排行，若method設定為top，則topN也需設定參數；ccslevel是以ccs_level_1為分組進行輸出，若method設定為ccslevel，則需在LVL_1_LABEL輸入cce_level的分類名稱。</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">plotWindow</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span>,
            method<span class="op">=</span><span class="st">"top"</span>,
            <span class="co">#LVL_1_LABEL="Neoplasms",</span>
            topN<span class="op">=</span><span class="fl">10</span><span class="op">)</span></code></pre></div>
-<p><img src="dxtime_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
+<p><img src="dxtime_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
 </div>
 <div id="hazard-ratio視覺化" class="section level4">
 <h4 class="hasAnchor">
 <a href="#hazard-ratio%E8%A6%96%E8%A6%BA%E5%8C%96" class="anchor"></a>Hazard ratio視覺化</h4>
 <p>將生存分析後的hazard ratio進行視覺化。<br>
 DataFile為從analWindow_Cox的輸出可獲得，pvalue為使用者設定。</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">coxmodel</span><span class="op">$</span><span class="va">summarytable</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    features exp(coef) lower .95 upper .95 Pr(&gt;|z|) caseCount</span>
 <span class="co">#&gt; 1:  ccs_134     0.482     0.108     2.153    0.339        22</span>
 <span class="co">#&gt; 2:  ccs_136         0         0       Inf    0.999         9</span>
@@ -533,16 +520,16 @@ DataFile為從analWindow_Cox的輸出可獲得，pvalue為使用者設定。</p>
 <span class="co">#&gt; 4:                         Diseases of the genitourinary system</span>
 <span class="co">#&gt; 5:                 Diseases of the skin and subcutaneous tissue</span>
 <span class="co">#&gt; 6: Diseases of the musculoskeletal system and connective tissue</span>
-<span class="fu">plotHR</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">coxmodel</span><span class="op">$</span><span class="va">model_table</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span>,
+<span class="fu">plotHR</span><span class="op">(</span>DataFile <span class="op">=</span> <span class="va">coxmodel</span><span class="op">$</span><span class="va">summarytable</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span>,
        pvalue <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></code></pre></div>
-<p><img src="dxtime_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
+<p><img src="dxtime_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
 </div>
 <div id="生存區線視覺化" class="section level4">
 <h4 class="hasAnchor">
 <a href="#%E7%94%9F%E5%AD%98%E5%8D%80%E7%B7%9A%E8%A6%96%E8%A6%BA%E5%8C%96" class="anchor"></a>生存區線視覺化</h4>
 <p>可輸出單個類別變數的存活差異，將病例組與對照組的生存曲線進行視覺化。<br>
 var中填入使用者要看的ccs category。</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">plotSurv</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span><span class="op">[</span><span class="va">window_N</span><span class="op">==</span><span class="st">"all"</span><span class="op">]</span>,
          DataFile_personal <span class="op">=</span> <span class="va">personal</span>,
          idColName <span class="op">=</span> <span class="va">ID</span>,
@@ -551,7 +538,7 @@ var中填入使用者要看的ccs category。</p>
          ccsDescription <span class="op">=</span> <span class="st">"Essential hypertension"</span><span class="op">)</span>
 <span class="co">#&gt; Scale for 'colour' is already present. Adding another scale for 'colour',</span>
 <span class="co">#&gt; which will replace the existing scale.</span></code></pre></div>
-<p><img src="dxtime_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
+<p><img src="dxtime_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
 </div>
 </div>
 </div>
