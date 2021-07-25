@@ -137,6 +137,12 @@ analWindow_Cox <- function(DataFile_cutData,DataFile_feature,DataFile_personal,i
       personal_test <-  DataFile_personal[ID %in% windowcut_window$ID]
       forROC <- data.frame(personal_test[,.(ID,label)],pre=predict(model[[i]], newdata = windowcut_window[,3:ncol(windowcut_window)], type="risk"))
       rocobj <- roc(forROC$label,forROC$pre)
+      # ##
+      # value <- as.numeric(auc(forROC$label,forROC$pre))
+      # assign(paste("window", i),value)
+      # assign(paste("window",i),assign("N",0))
+
+      ##
       windowauc[i] <- as.numeric(auc(forROC$label,forROC$pre))
       ROC <- coords(rocobj, x="best", input="threshold", best.method="youden")
       if(method=="vote"){
@@ -165,10 +171,21 @@ analWindow_Cox <- function(DataFile_cutData,DataFile_feature,DataFile_personal,i
     auc <- as.numeric(auc(personal_test$label,votesummary$finalpredict))
     test_timeseriesauc_summary[j] <- auc
   }
+
+
+
   test_windowauc_summary <- as.data.table(test_windowauc_summary)
   test_windowauc_summary$mean <- apply(test_windowauc_summary, 1, mean)
   test_windowauc_summary <- as.data.table(test_windowauc_summary)
   test_timeseriesauc_summary[j+1] <- mean(test_timeseriesauc_summary[1:j])
-  list.COX <- list(model = model, model_table = COXccs, traindata=finaldata, testdata=finaldata_test,evaluation_test=test_timeseriesauc_summary,evaluation_test_window=test_windowauc_summary)
-  return(list.COX)
+  test_windowauc_summary_list <- list()
+  for(i in 1:N){
+    assign(paste0("window",i),as.numeric(test_windowauc_summary[i,]))
+    test_windowauc_summary_list[[i]] <- get(paste0("window",i))
+  }
+  windowname <- paste0("window", 1:N)
+  names(test_windowauc_summary_list) <- windowname
+
+  list.Cox <- list(model = model, summarytable = COXccs,evaluation_test=test_timeseriesauc_summary,evaluation_test_window=test_windowauc_summary_list)
+  return(list.Cox)
 }

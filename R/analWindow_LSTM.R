@@ -20,6 +20,8 @@ analWindow_LSTM <- function(DataFile_cutData,DataFile_personal,labelColName,Data
   #input personal
   DataFile_personal <- as.data.table(DataFile_personal)
   personal_dataCol <- c(deparse(substitute(ID)),deparse(substitute(labelColName)),predictorColName)
+  #personal_dataCol <- c(deparse(substitute(ID)),deparse(substitute(label)),deparse(substitute(gender)))
+
   DataFile_personal <- DataFile_personal[, personal_dataCol, with=FALSE]
   names(DataFile_personal) <- c("ID","label",predictorColName)
 
@@ -222,7 +224,6 @@ analWindow_LSTM <- function(DataFile_cutData,DataFile_personal,labelColName,Data
       shuffle = FALSE
       #validation_data = list(val_data,val_targets)
     )
-    A <- model %>% evaluate(x_test, y_test, batch_size = batch_size)
     test_evaluation <- model %>% evaluate(x_test, y_test, batch_size = batch_size)
     test_average_auc[j] <- test_evaluation[[2]]
     train_evaluation <- model %>% evaluate(train_data, train_targets, batch_size = batch_size)
@@ -231,5 +232,5 @@ analWindow_LSTM <- function(DataFile_cutData,DataFile_personal,labelColName,Data
   }
   test_average_auc[j+1] <- mean(test_average_auc[1:j])
   train_average_auc[j+1] <- mean(train_average_auc[1:j])
-  return(list(model=model,x_test=x_test,y_test=y_test,evaluation_train=train_average_auc,evaluation_test=test_average_auc,A=A))
+  return(list(model=model,evaluation_test=test_average_auc,evaluation_train=train_average_auc))
 }
