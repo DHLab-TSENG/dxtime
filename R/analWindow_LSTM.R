@@ -158,7 +158,7 @@ analWindow_LSTM <- function(DataFile_cutData,DataFile_personal,labelColName,Data
         epoch = Epoch,
         verbose = 1,
         shuffle = FALSE,
-        #validation_data = list(val_data,val_targets)
+        validation_data = list(val_data,val_targets)
       )
       #存下所有validation data的auc紀錄
       auc_history <- history$metrics[[4]]
