@@ -177,7 +177,6 @@ analWindow_Cox <- function(DataFile_cutData,DataFile_feature,DataFile_personal,i
   test_windowauc_summary <- as.data.table(test_windowauc_summary)
   test_windowauc_summary$mean <- apply(test_windowauc_summary, 1, mean)
   test_windowauc_summary <- as.data.table(test_windowauc_summary)
-  test_timeseriesauc_summary[j+1] <- mean(test_timeseriesauc_summary[1:j])
   test_windowauc_summary_list <- list()
   for(i in 1:N){
     assign(paste0("window",i),as.numeric(test_windowauc_summary[i,]))

@@ -207,7 +207,5 @@ analWindow_LSTM <- function(DataFile_cutData,DataFile_personal,labelColName,Data
     train_average_auc[j] <- train_evaluation[[2]]
 
   }
-  test_average_auc[j+1] <- mean(test_average_auc[1:j])
-  train_average_auc[j+1] <- mean(train_average_auc[1:j])
   return(list(model=model,evaluation_test=test_average_auc,evaluation_train=train_average_auc))
 }
