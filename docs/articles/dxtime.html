@@ -67,7 +67,7 @@
       <h1 data-toc-skip>Getting started with dxtime</h1>
                         <h4 class="author">Yi-An, Zhu</h4>
             
-            <h4 class="date">2021-07-26</h4>
+            <h4 class="date">2021-08-08</h4>
       
       
       <div class="hidden name"><code>dxtime.Rmd</code></div>
@@ -205,11 +205,11 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
                        birthdayColName <span class="op">=</span> <span class="va">birthday</span> ,
                        binaryAge <span class="op">=</span> <span class="cn">T</span> ,
                        <span class="co">#ageLayer = 45,</span>
+                       <span class="co">#ifgroup = T, </span>
                        predictGap <span class="op">=</span> <span class="fl">180</span> ,
                        window <span class="op">=</span> <span class="fl">360</span> , 
                        N <span class="op">=</span> <span class="fl">5</span> ,
-                       countICD_toCCS <span class="op">=</span> <span class="fl">2</span>
-                       <span class="op">)</span>
+                       countICD_toCCS <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">windowcut</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt;    window_N periodAge  ID ccs_1 ccs_2 ccs_3 ccs_4 ccs_5 ccs_6 ccs_7</span>
 <span class="co">#&gt; 1:        1         1   1     0     0     0     0     0     0     0</span>
@@ -403,7 +403,7 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 <span class="co">#&gt; 5:                 Diseases of the skin and subcutaneous tissue</span>
 <span class="co">#&gt; 6: Diseases of the musculoskeletal system and connective tissue</span>
 <span class="va">coxmodel</span><span class="op">$</span><span class="va">evaluation_test</span>
-<span class="co">#&gt; [1] 0.6446078 0.5394265 0.6132812 0.5991052</span></code></pre></div>
+<span class="co">#&gt; [1] 0.6446078 0.5394265 0.6132812</span></code></pre></div>
 <p>以上述結果說明：<br>
 model_table為各時間區間進行Cox迴歸後的結果。<br>
 evaluation_test為統計各時間區間的最終預測結果。</p>
@@ -421,24 +421,25 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
 <span class="co"># install.packages("tensorflow")</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://keras.rstudio.com">keras</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/tensorflow">tensorflow</a></span><span class="op">)</span>
-<span class="co">#set_random_seed(10)</span>
+<span class="co">#gpu</span>
+<span class="co">#install_tensorflow(tensorflow = "gpu")</span>
 <span class="fu"><a href="https://rdrr.io/pkg/tensorflow/man/install_tensorflow.html">install_tensorflow</a></span><span class="op">(</span><span class="op">)</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; Installation complete.</span>
+
 <span class="co"># check version</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html">packageVersion</a></span><span class="op">(</span><span class="st">"keras"</span><span class="op">)</span>
 <span class="co">#&gt; [1] '2.4.0'</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html">packageVersion</a></span><span class="op">(</span><span class="st">"tensorflow"</span><span class="op">)</span>
 <span class="co">#&gt; [1] '2.5.0'</span>
-
 <span class="va">personal</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">:=</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">.SD</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">x</span><span class="op">==</span><span class="st">"F"</span>,<span class="fl">0L</span>,<span class="fl">1L</span><span class="op">)</span><span class="op">)</span>,.SDcols<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span><span class="op">]</span>
 
-<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM</span><span class="op">(</span>DataFile_cutData <span class="op">=</span> <span class="va">windowcut</span><span class="op">[</span><span class="va">window_N</span> <span class="op">!=</span> <span class="st">"all"</span><span class="op">]</span>,
+<span class="va">lstm</span> <span class="op">&lt;-</span> <span class="fu">analWindow_LSTM</span><span class="op">(</span>DataFile_cutData<span class="op">=</span><span class="va">windowcut</span><span class="op">[</span>,<span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"periodAge"</span><span class="op">)</span><span class="op">]</span>,
                          DataFile_personal<span class="op">=</span><span class="va">personal</span>,
                          labelColName <span class="op">=</span> <span class="va">label</span>,
                          predictorColName<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span><span class="op">)</span>,
                          N<span class="op">=</span><span class="fl">3</span>,
-                        batch_size<span class="op">=</span><span class="fl">10</span>,
+                        batch_size<span class="op">=</span><span class="fl">16</span>,
                         Epoch<span class="op">=</span><span class="fl">10</span>,
                         layer<span class="op">=</span><span class="fl">1</span>,
                         layer1_dropout <span class="op">=</span> <span class="fl">0.2</span>,
@@ -446,27 +447,13 @@ evaluation_test為統計各時間區間的最終預測結果。</p>
                         <span class="co"># layer2_dropout = 0,</span>
                         <span class="co"># layer2_units = 16,</span>
                         <span class="co"># units=16,</span>
-                        testN <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>
-<span class="co">#&gt; optimal epoch is  2</span>
-
-<span class="co"># lstm &lt;- analWindow_LSTM(DataFile_cutData=windowcut[,-c("periodAge")],</span>
-<span class="co">#                          DataFile_personal=personal,</span>
-<span class="co">#                          labelColName = label,</span>
-<span class="co">#                          predictorColName=c("gender"),</span>
-<span class="co">#                          N=3,</span>
-<span class="co">#                         batch_size=16,</span>
-<span class="co">#                         Epoch=10,</span>
-<span class="co">#                         layer=1,</span>
-<span class="co">#                         #layer1_dropout = 0.2,</span>
-<span class="co">#                         # layer1_units = 16,</span>
-<span class="co">#                         # layer2_dropout = 0,</span>
-<span class="co">#                         # layer2_units = 16,</span>
-<span class="co">#                         # units=16,</span>
-<span class="co">#                         testN=2)</span>
+                        testN<span class="op">=</span><span class="fl">2</span><span class="op">)</span>
+<span class="co">#&gt; optimal epoch is  3</span>
+<span class="co">#&gt; optimal epoch is  1</span>
 
 <span class="co">## evaluate</span>
 <span class="va">lstm</span><span class="op">$</span><span class="va">evaluation_test</span>
-<span class="co">#&gt; [1] 0.5882353 0.7524510 0.6617647 0.5686275 0.6427696</span></code></pre></div>
+<span class="co">#&gt; [1] 0.6925926 0.8392857</span></code></pre></div>
 </div>
 <div id="七視覺化" class="section level3">
 <h3 class="hasAnchor">
