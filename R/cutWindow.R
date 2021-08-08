@@ -30,9 +30,10 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
   if(ifgroup == FALSE){
     for(i in 1:N){
       DataFile_window <- DataFile[predictdate-window*i < date & date <= predictdate-window*(i-1),]
-      DataFile_followindow <- DataFile_window %>% mutate(values=1)
+      DataFile_followindow <- DataFile_window
+      DataFile_followindow$values <- 1
       DataFile_followindow$ICD <- paste0("ICD_",DataFile_followindow$ICD)
-      DataFile_followindow <- DataFile_followindow %>% select(ID,ICD,values) %>% unique()
+      DataFile_followindow <- unique(DataFile_followindow[,.(ID,ICD,values)])
       ICDWide <- spread(DataFile_followindow,key=ICD,value=values)
       ICDWide <- cbind(ICDWide[,1],ICDWide[,lapply(.SD,function(x){ifelse(is.na(x),0L,1L)}),.SDcols=2:ncol(ICDWide)])
       #othercode
@@ -119,10 +120,9 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
           if(is.null(window)){
             window_N<- 1
             CCSWide_followindow <- cbind(window_N, CCSWide_followindow)  ##如果window為NA，代表沒有要切分window，總表直接為T=1
-            #計算indexage
+
             if(deparse(substitute(birthdayColName)) != "NULL"){
-              age <- DataFile[,c("ID","indexdate","birthday"),] %>% unique()
-              periodAge <- round(age[,((indexdate-predictGap-N*window)-birthday)/365.25,],digits = 2)
+              periodAge <- NA
               CCSWide_followindow <- cbind(periodAge,CCSWide_followindow)
               if(binaryAge){
                 CCSWide_followindow[,periodAge:=lapply(.SD,function(x)ifelse(x>ageLayer,1,0)),.SDcols="periodAge"]
@@ -135,8 +135,7 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
             window_N <- 0
             CCSWide_followindow <- cbind(window_N, CCSWide_followindow)  ##如果window不為NA，代表要切分window，此總表設定為T=0
             if(deparse(substitute(birthdayColName)) != "NULL"){
-              age <- DataFile[,c("ID","indexdate","birthday"),] %>% unique()
-              periodAge <- round(age[,((indexdate-predictGap-N*window)-birthday)/365.25,],digits = 2)
+               periodAge <- NA
               CCSWide_followindow <- cbind(periodAge,CCSWide_followindow)
               if(binaryAge){
                 CCSWide_followindow[,periodAge:=lapply(.SD,function(x)ifelse(x>ageLayer,1,0)),.SDcols="periodAge"]
