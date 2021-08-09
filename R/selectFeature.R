@@ -15,6 +15,7 @@ selectFeature <- function(DataFile_cutData,DataFile_personal,idColName,labelColN
 
   DataFile_personal <- as.data.table(DataFile_personal)
   dataCol <- c(deparse(substitute(idColName)),deparse(substitute(labelColName)),deparse(substitute(dataLengthColName)))
+  #dataCol <- c(deparse(substitute(ID)),deparse(substitute(label)),deparse(substitute(dataLength)))
   personal <- DataFile_personal[,dataCol, with=FALSE]
   names(personal) <- c("ID","futat","futime")
   casecount_limit <- caseCountRate_limit*length(unique(personal$ID))
@@ -28,19 +29,16 @@ selectFeature <- function(DataFile_cutData,DataFile_personal,idColName,labelColN
       cutdata_bywindow <- cutdata[window_N == i,-c("window_N")]
     }
     personal_bywindow <- merge(personal,cutdata_bywindow,by="ID",all.x=T)
-    ##決定以mul/single進行特徵選取
     if(type=="mul"){
-      #string <- paste(colnames(temp)[4:(ncol(CCSWide)+2)], collapse = "`+`")########從這
-      string <- paste(colnames(personal_bywindow)[4:(ncol(personal_bywindow))], collapse = "`+`")##因為變數太多會跑不動，所以先到50
+      string <- paste(colnames(personal_bywindow)[4:(ncol(personal_bywindow))], collapse = "`+`")
       string2 <- paste0("`", string, "`")
-      f1 <- as.formula(paste("Surv(futime, futat) ~ ", string2))###從這0715 a.m.12:27
-      ova.fit <- coxph(f1, data = personal_bywindow)#Error: no function to return from, jumping to top level
+      f1 <- as.formula(paste("Surv(futime, futat) ~ ", string2))
+      ova.fit <- coxph(f1, data = personal_bywindow)
       ova.fit
       COXccs <- summary(ova.fit)
       COXccs <- as.data.table(COXccs$coefficients, COXccs$conf.int)
       setDT(COXccs)
     }else if(type=="single"){
-      ###(單)
       COXccs <- data.table()
       for(j in 4:ncol(personal_bywindow)){
         string2 <- paste0(colnames(personal_bywindow)[j])
