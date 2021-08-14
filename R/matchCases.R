@@ -36,6 +36,7 @@ matchCases <- function(DataFile,idColName,labelColName,matchedVariableColName = 
       if(class_control[i]$n < class_control[i]$matchcontrol_n){
         controlN <- c(1:class_control[i]$n)
       }else{
+        set.seed(5)
         controlN <- sample(1:class_control[i]$n,class_control[i]$matchcontrol_n)
       }
       control <- patformatch[label==0 & subclass==class_control[i]$subclass][controlN]
