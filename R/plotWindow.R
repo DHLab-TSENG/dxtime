@@ -8,16 +8,17 @@ plotWindow <- function(DataFile_cutData,method="top",topN=10,LVL_1_LABEL="Neopla
   visbylabel_count$variable <- as.character(visbylabel_count$variable)
   visbylabel_count$window_N <- as.character(visbylabel_count$window_N)
   visbylabel_count <- merge(visbylabel_count,unique(ccstable[,.(CCS_CATEGORY,CCS_CATEGORY_DESCRIPTION)]),by.x="variable",by.y="CCS_CATEGORY",all.x = TRUE)
-
+  visbylabel_count$count <- as.integer(visbylabel_count$count)
   if(method == "top"){
     variable_top10 <- visbylabel_count[order(-count)][window_N=="all" , c("variable")][1:topN]
     setDT(visbylabel_count)
     visbylabel_count <- visbylabel_count[window_N!="all"]
     visbylabel_count$window_N <- as.numeric(visbylabel_count$window_N)
-    ccsplot <- ggplot(visbylabel_count[window_N!="all" & (variable %in% variable_top10$variable)],aes(x=CCS_CATEGORY_DESCRIPTION,y=window_N,fill=count))+ geom_tile(colour="white",size=0.05) +
+    ccsplot <- ggplot(visbylabel_count[window_N!="all" & (variable %in% variable_top10$variable)],aes(x=CCS_CATEGORY_DESCRIPTION,y=window_N))+
+      geom_tile(aes(fill=count),colour="white",size=0.05) +
       scale_fill_gradient(low = "white",high = "steelblue") +
-      theme(axis.text.x = element_text(size=rel(0.9),angle=80,hjust=1)) +
-      guides(fill = guide_legend(title="case count")) +
+      theme(axis.text.x = element_text(size=rel(0.9),angle=90,hjust=1,vjust = 0.3)) +
+      labs(fill = "case count") +
       theme(panel.background = element_rect(fill="white"),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank())+
@@ -31,8 +32,8 @@ plotWindow <- function(DataFile_cutData,method="top",topN=10,LVL_1_LABEL="Neopla
     visbylabel_count$window_N <- as.numeric(visbylabel_count$window_N)
     ccsplot <- ggplot(visbylabel_count[window_N!="all" & (variable %in% variable_level$CCS_CATEGORY)],aes(x=CCS_CATEGORY_DESCRIPTION,y=window_N,fill=count))+ geom_tile(colour="white",size=0.05)+
       scale_fill_gradient(low = "white",high = "steelblue")+
-      theme(axis.text.x = element_text(size=rel(0.8),angle=80,hjust=1))+
-      guides(fill = guide_legend(title="case count")) +
+      theme(axis.text.x = element_text(size=rel(0.8),angle=80,hjust=1,vjust = 0.3))+
+      labs(title="case count") +
       theme(panel.background = element_rect(fill="white"),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank())+
@@ -42,8 +43,8 @@ plotWindow <- function(DataFile_cutData,method="top",topN=10,LVL_1_LABEL="Neopla
     setDT(visbylabel_count)
     ccsplot <- ggplot(visbylabel_count[window_N!="all"],aes(x=variable,y=window_N,fill=count))+geom_tile(colour="white",size=0.05)+
       scale_fill_gradient(low = "white",high = "steelblue") +
-      theme(axis.text.x = element_text(size=rel(0.8),angle=80,hjust=1)) +
-      guides(fill = guide_legend(title="case count")) +
+      theme(axis.text.x = element_text(size=rel(0.8),angle=80,hjust=1,vjust = 0.3)) +
+      labs(title="case count") +
       theme(panel.background = element_rect(fill="white"),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank())
