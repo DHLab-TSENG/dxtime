@@ -67,7 +67,7 @@
       <h1 data-toc-skip>Getting started with dxtime</h1>
                         <h4 class="author">Yi-An, Zhu</h4>
             
-            <h4 class="date">2021-08-08</h4>
+            <h4 class="date">2021-09-07</h4>
       
       
       <div class="hidden name"><code>dxtime.Rmd</code></div>
@@ -130,23 +130,7 @@ record_dm為該200名個案在指標日(發生疾病/最後一筆…)的之診�
                              includePeriodAtLeast <span class="op">=</span> <span class="fl">360</span>, 
                              countICDAtLeast <span class="op">=</span> <span class="fl">2</span>,
                              align<span class="op">=</span><span class="st">"right"</span>
-                             <span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">Patient</span><span class="op">)</span> 
-<span class="co">#&gt;     ID  firstDate predictDate  indexDate includePeriod countICD  cri</span>
-<span class="co">#&gt; 1: 149 2002-03-05  2018-04-27 2018-10-24          5897      167 TRUE</span>
-<span class="co">#&gt; 2: 196 2006-10-21  2017-01-30 2017-07-29          3754      106 TRUE</span>
-<span class="co">#&gt; 3:  61 2001-05-13  2017-07-16 2018-01-12          5908       57 TRUE</span>
-<span class="co">#&gt; 4: 142 2001-02-09  2018-04-08 2018-10-05          6267     1020 TRUE</span>
-<span class="co">#&gt; 5:  98 2002-01-11  2004-01-08 2004-07-06           727      191 TRUE</span>
-<span class="co">#&gt; 6:   5 2014-01-16  2018-02-21 2018-08-20          1497      158 TRUE</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">length</span><span class="op">$</span><span class="va">Record</span><span class="op">)</span> 
-<span class="co">#&gt;     ID  ICD       date</span>
-<span class="co">#&gt; 1: 149 4019 2015-07-08</span>
-<span class="co">#&gt; 2: 149 2720 2015-07-08</span>
-<span class="co">#&gt; 3: 149 7840 2015-07-08</span>
-<span class="co">#&gt; 4: 149 4019 2015-09-30</span>
-<span class="co">#&gt; 5: 149 2720 2015-09-30</span>
-<span class="co">#&gt; 6: 149 7840 2015-09-30</span></code></pre></div>
+                             <span class="op">)</span></code></pre></div>
 <p>以上框結果說明：</p>
 <p>第一種結果<strong>Patient</strong>，該資料表顯示三個時間點，firstDate、predicDate、indexDate。 firstDate為第一筆診斷紀錄的日期；predictDate為預測資料的最後一個預測時間點，也就是indexDate-exposurePeriod；indexDate為最後一筆資料的時間點。 includePeriod計算該個案在predictDate之前的資料長度，而count計算該個案的診斷紀錄筆數，如符合研究設定的篩選條件(includePeriod&gt;includePeriodAtLeast &amp; count&gt;count_limit)的個案，在cri顯示TRUE，反之則為FALSE。</p>
 <p>第二種資料<strong>Record</strong>，從符合個案的資料中，篩選出符合研究長度(exposurePeriod)的診斷紀錄。</p>
