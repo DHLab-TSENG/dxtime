@@ -42,7 +42,7 @@ plotWindow <- function(DataFile_cutData,method="top",topN=10,LVL_1_LABEL="Neopla
 
   }else{
     setDT(visbylabel_count)
-    ccsplot <- ggplot(visbylabel_count[window_N!="all"] ,aes(x=CCS_CATEGORY_DESCRIPTION,y=window_N))+
+    ccsplot <- ggplot(visbylabel_count[window_N!="all"] ,aes(x=window_N,y=CCS_CATEGORY_DESCRIPTION))+
       scale_fill_gradient(low = "white",high = "steelblue") +
       theme(axis.text.x = element_text(hjust=0.5,vjust = 1)) +
       labs(title="case count") +
