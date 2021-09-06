@@ -1,7 +1,7 @@
 ---
 output:
-  word_document: default
   html_document: default
+  word_document: default
 ---
 ```{r, echo=FALSE} 
 knitr::opts_chunk$set(error = TRUE) 
@@ -9,7 +9,7 @@ knitr::opts_chunk$set(error = TRUE)
 
 ---
 title: "Getting started with dxtime"
-author: "Yi-An, Chu"
+author: "Yi-An, Zhu"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -19,16 +19,16 @@ vignette: >
 ---
 
 ## 安裝套件
-```r
+```{r ,message = FALSE, warning = FALSE,eval=F}
 install.packages("devtools")
-# Install development version from GitHub
 devtools::install_github("DHLab-TSENG/dxtime")
 library(dxtime)
 ```
 
-```{r setup, echo = FALSE, message = FALSE}
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(collapse = T, comment = "#>")
 options(tibble.print_min = 4L, tibble.print_max = 4L)
+options(pkgdown.internet = FALSE)
 install.packages("C:/Users/anay1/Desktop/R/dxtime")
 library(dxtime)
 ```
@@ -42,9 +42,7 @@ head(record_dm)
 ```
 
 ## 使用流程
-<img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/overview.png" style="display:block; margin:auto; width:100%;">  
-
-名詞的時間軸狀態
+名詞在時間軸上狀態
 <img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/timeline.png" style="display:block; margin:auto; width:100%;">   
 
   
@@ -74,8 +72,6 @@ length <- filterCasesRecords(DataFile = record_dm,
                              countICDAtLeast = 2,
                              align="right"
                              )
-head(length$Patient) 
-head(length$Record) 
 
 ```
 以上框結果說明：
@@ -119,9 +115,9 @@ nrow(match)
 `N`：設定時間窗數量，注意：若該個案在某時間窗中沒有診斷資料，將會自動補0。   
 `countICD_toCCS`：定義在追蹤期間，多少個疾病診斷碼(ICD)視為該患者具有該疾病(ccs)。  
 
-```{r,warning = F}
-#forcut <- merge(length$Record %>% filter(ID %in% match$ID),pat_dm[,.(ID,birthday)],all.x=T)
+```{r,warning = F,message=FALSE}
 forcut <- merge(record_dm,pat_dm[,.(ID,birthday)],all.x=T)
+#forcut <- merge(length$Record %>% filter(ID %in% match$ID),pat_dm[,.(ID,birthday)],all.x=T)
 head(forcut)
 windowcut <- cutWindow(DataFile = forcut , 
                        idColName = ID ,
@@ -130,11 +126,11 @@ windowcut <- cutWindow(DataFile = forcut ,
                        birthdayColName = birthday ,
                        binaryAge = T ,
                        #ageLayer = 45,
+                       #ifgroup = T, 
                        predictGap = 180 ,
                        window = 360 , 
                        N = 5 ,
-                       countICD_toCCS = 2
-                       )
+                       countICD_toCCS = 2)
 head(windowcut[,1:10])
 ```
 以上述結果說明：  
@@ -143,16 +139,18 @@ window_N代表時間窗的次序，數字越小越接近指標日；此外window
 其餘的數字欄位為CCS的編碼，1表示得到疾病，0則反之。  
 
 ### 四、選擇特徵  
-運用時間窗資料，將所有ccs為預測變數，進行Cox單變量回歸後，選出p-value<0.05 & 得病人數>caseCountRate_limit的特徵；  
-可以用全長度資料做一次特徵篩選(method = "allWindow")，也可以做多時間窗(method = "perWindow")的特徵篩選。  
+所有ccs為自變數(283個)，label為依變數，進行Cox單變量回歸後，選出p-value<0.05 & 得病人數>caseCountRate_limit*總人數的特徵；  
+有兩種方法可以選擇(參考下圖)，第一個為不分時間窗的特徵篩選(method = "allWindow")，第二則是依照時間窗的區隔(method = "perWindow")做特徵篩選。  
+
+<img src="https://raw.githubusercontent.com/DHLab-TSENG/dxtime/main/image/selectFeature.png" style="display:block; margin:auto; width:100%;">   
 
 主要需設定的參數有：  
-`caseCountRate_limit`：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵，此參數的單為為比例，因此不得大於1。  
+`caseCountRate_limit`：若罹患某疾病(CCS)的人數過少，可設定最低下限予以限制，避免被篩選為特徵，此參數的單位為比例，因此不得大於1。  
 `isDescription`：輸出結果是否具備ccs的中文描述。  
-`method`: 選取特徵的方法，method = "perWindow"區分時間窗做特徵選取，method = "allWindow"為不區分時間窗的特徵選取。  
+`method`: 選取特徵的方法，method = "allWindow"為不區分時間窗的特徵選取，method = "perWindow"區分時間窗做特徵選取。  
 
 ```{r, warning=FALSE}
-head(length$DataFile_rec)
+head(length$Record)
 record_dm <- record_dm
 lengthdata <- unique(record_dm[,dataLength:=max(date)-min(date),by="ID"][,.(ID,dataLength)])
 #lengthdata <- unique(length$Record[,dataLength:=max(date)-min(date),by="ID"][,.(ID,dataLength)])
@@ -194,7 +192,7 @@ head(personal)
 此外，根據放入的feature，函式自動會使用對應區間的特徵。
 
 
-```{r, warning=FALSE}
+```{r, warning=FALSE,message=FALSE}
 coxmodel <- analWindow_Cox(DataFile_cutData = windowcut[window_N != "all"],
                          DataFile_feature = feature,
                          DataFile_personal = personal,
@@ -205,7 +203,7 @@ coxmodel <- analWindow_Cox(DataFile_cutData = windowcut[window_N != "all"],
                          isDescription = T,
                          testN = 3,
                          method="weighting")
-head(coxmodel$model_table[[1]])
+head(coxmodel$summarytable[[1]])
 coxmodel$evaluation_test
 
 ```
@@ -232,36 +230,25 @@ LSTM為RNN中最常使用的模型，運用於做時間序列分析有良好的�
 
 
 ```{r}
+# install.packages("keras")
+# install.packages("tensorflow")
 library(keras)
 library(tensorflow)
-#set_random_seed(10)
+#gpu
+#install_tensorflow(tensorflow = "gpu")
 install_tensorflow()
+
 # check version
 packageVersion("keras")
 packageVersion("tensorflow")
-
 personal[,c("gender"):=lapply(.SD,function(x)ifelse(x=="F",0L,1L)),.SDcols=c("gender")]
-# lstm <- analWindow_LSTM(DataFile_cutData=windowcut[,-c("periodAge")],
-#                          DataFile_personal=personal,
-#                          labelColName = label,
-#                          predictorColName=c("gender"),
-#                          N=3,
-#                         batch_size=16,
-#                         Epoch=10,
-#                         layer=1,
-#                         #layer1_dropout = 0.2,
-#                         # layer1_units = 16,
-#                         # layer2_dropout = 0,
-#                         # layer2_units = 16,
-#                         # units=16,
-#                         testN=2)
 
-lstm <- analWindow_LSTM(DataFile_cutData = windowcut[window_N != "all"],
+lstm <- analWindow_LSTM(DataFile_cutData=windowcut[,-c("periodAge")],
                          DataFile_personal=personal,
                          labelColName = label,
                          predictorColName=c("gender"),
                          N=3,
-                        batch_size=10,
+                        batch_size=16,
                         Epoch=10,
                         layer=1,
                         layer1_dropout = 0.2,
@@ -269,17 +256,10 @@ lstm <- analWindow_LSTM(DataFile_cutData = windowcut[window_N != "all"],
                         # layer2_dropout = 0,
                         # layer2_units = 16,
                         # units=16,
-                        testN = 4)
+                        testN=2)
 
 ## evaluate
-model <- lstm$model
-x_test <- lstm$x_test
-y_test <- lstm$y_test
-lstm$evaluation_train
 lstm$evaluation_test
-
-head(model %>% predict(x_test, y_test, batch_size = 10))
-
 ```
 ### 七、視覺化
 視覺化功能分成三個部分，皆可由前述功能產出的資料直接匯入，輸出視覺化的圖片。  
@@ -301,8 +281,8 @@ plotWindow(DataFile_cutData = windowcut,
 將生存分析後的hazard ratio進行視覺化。  
 DataFile為從analWindow_Cox的輸出可獲得，pvalue為使用者設定。
 ```{r}
-head(coxmodel$model_table[[3]])
-plotHR(DataFile = coxmodel$model_table[[3]],
+head(coxmodel$summarytable[[3]])
+plotHR(DataFile = coxmodel$summarytable[[3]],
        pvalue = 0.05)
 ```
 
