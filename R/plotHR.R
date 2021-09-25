@@ -1,9 +1,7 @@
 plotHR <- function(DataFile,pvalue=0.05){
-  #DataFile[[]] <- DataFile[[1]]
   DataFile$CCS_CATEGORY <- gsub(pattern = '`',replacement = '',x = DataFile$CCS_CATEGORY)
   DataFile <- DataFile[caseCount != 0]
   ccstable <- ccstable
-  #ccstable[,features:= lapply(.SD,function(x)ifelse(grepl("[0-9]+",x),paste0("ccs_",x),x)),.SDcols="CCS_CATEGORY"]
 
   if(is.null(DataFile$CCS_CATEGORY_DESCRIPTION)){
     DataFile <- merge(DataFile,unique(ccstable[,.(CCS_CATEGORY,CCS_CATEGORY_DESCRIPTION)]),all.x = T,by.x="features",by.y="CCS_CATEGORY")
@@ -24,7 +22,6 @@ plotHR <- function(DataFile,pvalue=0.05){
     geom_errorbar(aes(ymin = boxCILow, ymax = boxCIHigh),width = 0.5,cex = 0.9,color="black") +
     geom_point(size = 1, color = "orange") +
     geom_hline(yintercept =1,linetype = 2) +
-    #geom_pointrange(aes(col = boxLabels),size=0.3,color = "blue") +
     coord_flip() +
     theme(legend.position="none",
           axis.text.y = element_text(size=rel(0.8),angle=0,hjust=1),
