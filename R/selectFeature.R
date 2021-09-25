@@ -11,18 +11,15 @@ selectFeature <- function(DataFile_cutData,DataFile_personal,idColName,labelColN
   ccscategory <- unique(c(ccstable$CCS_CATEGORY))
   dataCol <- c(deparse(substitute(ID)),deparse(substitute(window_N)),ccscategory)
   cutdata <- cutdata[,dataCol,with = FALSE]
-  #cutdata <- cutWindow(DataFile, ID, ICD, date, predictGap=predictGap , window=window , N=N , countICD_toccs=countICD_toccs)
-
   DataFile_personal <- as.data.table(DataFile_personal)
   dataCol <- c(deparse(substitute(idColName)),deparse(substitute(labelColName)),deparse(substitute(dataLengthColName)))
-  #dataCol <- c(deparse(substitute(ID)),deparse(substitute(label)),deparse(substitute(dataLength)))
   personal <- DataFile_personal[,dataCol, with=FALSE]
   names(personal) <- c("ID","futat","futime")
   casecount_limit <- caseCountRate_limit*length(unique(personal$ID))
 
   COXccs_summary <- list()
   for(i in 1:N){
-    ##取該window的數據
+    #取該window的數據
     if(N==1){
       cutdata_bywindow <- cutdata[window_N == "all",-c("window_N")]
     }else{
@@ -49,18 +46,16 @@ selectFeature <- function(DataFile_cutData,DataFile_personal,idColName,labelColN
         setDT(COXccs)
       }
     }
-    ##計算casecount數量
+    #計算casecount數量
     setnames(COXccs,"rn","CCS_CATEGORY")
     CCSWide_num <- setDT(cutdata_bywindow)[,lapply(cutdata_bywindow[,2:ncol(cutdata_bywindow)],sum),]
-    #CCSWide_num <- gather(CCSWide_num,key=rn,value=count)
     CCSWide_num <- melt(setDT(CCSWide_num), na.rm = TRUE)[,.(CCS_CATEGORY=variable,count=value)]
     CCSWide_num$CCS_CATEGORY <- paste0(CCSWide_num$CCS_CATEGORY)
     COXccs <- merge(COXccs,CCSWide_num,by="CCS_CATEGORY",all.x=T)
-    ##決定是否增加文字說明
+    #決定是否增加文字說明
     if(isDescription==T){
       COXccs_des <- unique(ccstable[,c("CCS_CATEGORY","CCS_CATEGORY_DESCRIPTION","CCS_LVL_1_LABEL","CCS_LVL_2_LABEL"),])
-      #COXccs_des <- setnames(COXccs_des,"CCS_CATEGORY","CCS_CATEGORY")
-      COXccs_des$CCS_CATEGORY <- paste0(COXccs_des$CCS_CATEGORY)
+       COXccs_des$CCS_CATEGORY <- paste0(COXccs_des$CCS_CATEGORY)
       COXccs <- merge(COXccs,COXccs_des,by="CCS_CATEGORY",all.x=T)
       COXccs <- COXccs[, c("CCS_CATEGORY","exp(coef)","Pr(>|z|)","count","CCS_CATEGORY_DESCRIPTION","CCS_LVL_1_LABEL","CCS_LVL_2_LABEL")]
     }else{
