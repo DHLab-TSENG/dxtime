@@ -1,16 +1,13 @@
 cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=NULL,binaryAge=F,ageLayer = 45,ifgroup = TRUE,countICD_toCCS=2,predictGap,window=NULL,N=NULL){
 
   library(dxpr)
-   #####建function，ccswide_summary和ccswide_followindow
   rep <- function(x,y){
     if(y==0){
       x <- 0
     }else{}
     return(x)
   }
-  ###
   if(is.null(N)){N <- 1}
-  ###
   DataFile <- as.data.table(DataFile)
   if(deparse(substitute(birthdayColName)) != "NULL"){
     dataCol <- c(deparse(substitute(idColName)),deparse(substitute(icdColName)),deparse(substitute(dateColName)),deparse(substitute(birthdayColName)))
@@ -18,11 +15,9 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
     names(DataFile) <- c("ID","ICD","date","birthday")
   }else{
     dataCol <- c(deparse(substitute(idColName)),deparse(substitute(icdColName)),deparse(substitute(dateColName)))
-    #dataCol <- c(deparse(substitute(ID)),deparse(substitute(ICD)),deparse(substitute(date)))
     DataFile <- DataFile[,dataCol,with=FALSE]
     names(DataFile) <- c("ID","ICD","date")
   }
-  #DataFile <- DataFile[,dataCol,with=FALSE]
   DataFile <- DataFile[,indexdate := max(date),by=ID][,predfirstdate := min(date),by=ID][,predictdate := indexdate-predictGap,]
   #直接長表轉寬表
   icdtable <- paste0("ICD_",unique(DataFile$ICD))
@@ -50,7 +45,6 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
       #加上window次序
       window_N <- i
       ICDWide <- cbind(window_N, ICDWide)
-      #依照ID排序
       ICDWide <- ICDWide[order(ID)]
       #計算periodAge
       if(deparse(substitute(birthdayColName)) != "NULL"){
@@ -71,7 +65,6 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
       ICDWide_summary$periodAge <- NULL
     }
 
-    #CCSWide_summary <- rbind(CCSWide_summary,CCSWide_followindow)
     if(deparse(substitute(birthdayColName)) != "NULL"){
       ICDWide_summary <- cbind(ICDWide_summary[,c("window_N")],ICDWide_summary[,-c("window_N")])
     }
@@ -109,7 +102,6 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
           #othercode
           otherccs <- unique(ccstable$CCS_CATEGORY)[!unique(ccstable$CCS_CATEGORY) %in% colnames(CCSWide_followindow)]
           CCSWide_followindow[,c(otherccs):=NA]
-          #CCSWide_followindow <-as.logical(CCSWide_followindow[,c(2:ncol(CCSWide_followindow)),])
           #otherpt
           Otherpt_followindow <- c(unique(DataFile[! DataFile$ID %in% CCSWide_followindow$ID,.(ID)]))
           OtherPt_table_followindow <- data.table(matrix(nrow=lengths(Otherpt_followindow),ncol=284))
@@ -128,8 +120,6 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
                 CCSWide_followindow[,periodAge:=lapply(.SD,function(x)ifelse(x>ageLayer,1,0)),.SDcols="periodAge"]
               }
             }
-            #CCSWide_followindow$window_N <- as.character(CCSWide_followindow$window_N)
-            #CCSWide_followindow[window_N==0,window_N:="all"]
             return(CCSWide_followindow)
           }else{
             window_N <- 0
@@ -191,7 +181,6 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
         }
         window_N <- i
         CCSWide <- cbind(window_N, CCSWide)
-        #依照ID排序
         CCSWide <- CCSWide[order(ID)]
         CCSWide_followindow <- CCSWide_followindow[order(ID)]
         #如果在predwindow中沒生病，在此Window中也不應該生病
@@ -207,7 +196,6 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
           periodAge <- round(age[,((indexdate-predictGap-i*window)-birthday)/365.25,],digits = 2)
           CCSWide_test <- cbind(periodAge,CCSWide_test)
         }
-        #合併
         CCSWide_summary <- rbind(CCSWide_summary,CCSWide_test)
       }
     }
