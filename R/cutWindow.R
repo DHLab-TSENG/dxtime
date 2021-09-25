@@ -219,6 +219,4 @@ cutWindow <- function(DataFile,idColName,icdColName,dateColName,birthdayColName=
     return(CCSWide_summary)
   }
 
-
-
 }
