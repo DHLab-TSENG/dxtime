@@ -7,15 +7,12 @@ filterCasesRecords <- function(DataFile,idColName,icdColName,dateColName,predict
   DataFile <- DataFile[, c("firstDate", "indexDate") := list(min(date), max(date)), by=ID]
   DataFile <- as.data.table(DataFile)
   #
-  # if(is.null(folloWindow_limit)){folloWindow_limit <- 0}
-  # if(is.null(countICDAtLeast)){countICDAtLeast <- 0}
-  #資料長度
+  #資料時間長度
   DataFile[,recordperiod := unclass(indexDate-firstDate),]
   DataFile[,predictDate := indexDate-predictGap,]
   DataFile[,includePeriod := unclass(predictDate-firstDate),]
   DataFile[,predfirstdate := predictDate - exposurePeriod,]
-  ###########Step1 資料長度至少五年，且五年內資料至少兩筆
-  ###CAD
+  #CAD
   DataFile_pat <- DataFile[,countICD:= .N,by=ID][includePeriod >= includePeriodAtLeast & countICD >= countICDAtLeast, cri := T]
   DataFile_pat[is.na(DataFile_pat$cri),c("cri")] <- F
   DataFile_pat <- unique(DataFile_pat[,c("ID","firstDate","predictDate","indexDate","includePeriod","countICD","cri")])#符合條件者cri=T
