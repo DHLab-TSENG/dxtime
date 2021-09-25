@@ -1,25 +1,16 @@
 plotSurv <- function(DataFile_cutData,DataFile_personal,idColName,labelColName,dataLengthColName,ccsDescription){
   dataCol <- c(deparse(substitute(idColName)),deparse(substitute(labelColName)),deparse(substitute(dataLengthColName)))
-  #dataCol <- c(deparse(substitute(ID)),deparse(substitute(label)),deparse(substitute(dataLength)))
   DataFile_personal <- DataFile_personal[,dataCol,with = FALSE]
   names(DataFile_personal) <- c("ID","label","dataLength")
   DataFile_personal$dataLength <- as.numeric(DataFile_personal$dataLength)
-  # DataFile <- merge(DataFile,DataFile_personal,all.x = T)
-  # cutdata <- cutWindow(DataFile, ID, ICD, date, predictGap=0 )
 
-  #COXccs_summary <- list()
-
-  ##取該window的數據
+  #取該window的數據
   cutdata <- DataFile_cutData[,(ncol(DataFile_cutData)-283):ncol(DataFile_cutData)]
-  #tranName <- data.table(oriname=names(cutdata[,2:ncol(cutdata)]))
-  #tranName <- merge(tranName,unique(ccstable[,.(CCS_CATEGORY,CCS_CATEGORY_DESCRIPTION)]),by.x = "oriname",by.y = "CCS_CATEGORY",all.x = TRUE)
   setnames(cutdata,names(cutdata)[2:ncol(cutdata)],ccstable$CCS_CATEGORY_DESCRIPTION)
-  #DataFile <- DataFile[, c("predfirstdate", "indexdate") := list(min(date), max(date)), by=ID]
   ##原始資料取futime數據
   personal <- DataFile_personal[,c("ID","label","dataLength"),]
   personal <- unique(personal)
   personal <- merge(personal,cutdata,by="ID",all.x=T)
-  ##決定以mul/single進行特徵選取
   string2 <- paste0("`",ccsDescription,"`")
   f1 <- as.formula(paste("Surv(dataLength,label) ~ personal$", string2))
   surv <- survfit(f1, data=personal)
