@@ -1,5 +1,4 @@
 plotWindow <- function(DataFile_cutData,method="top",topN=10,LVL_1_LABEL="Neoplasms"){
-  #visbylabel <- merge(windowcut,pat_dm[,.(ID,label)],by="ID",all.x = T)
   DataFile_cutData <- as.data.table(DataFile_cutData)
   ccscategory <- unique(ccstable$CCS_CATEGORY)
   DataFile_cutData <- DataFile_cutData[,c("window_N",ccscategory),with=FALSE]
